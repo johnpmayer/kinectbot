@@ -29,9 +29,9 @@ double posY;
 double posT;
 
 pthread_mutex_t _lock;
-pthread_mutex_t* lock = &_lock;
+//pthread_mutex_t* lock = &_lock;
 
-Roomba* roomba;
+//Roomba* roomba;
 
 uint32_t get_region(uint32_t offset)
 {
@@ -69,7 +69,7 @@ uint8_t* findObstacles() {
 			      sizeof(uint64_t) );
   
   uint8_t* obstacles = calloc( (W / REGION_RES) * (H / REGION_RES), 
-			      sizeof(uint8_t) );
+			       sizeof(uint8_t) );
   
   uint32_t timestamp;
   
@@ -84,51 +84,57 @@ uint8_t* findObstacles() {
       exit(1);
     }
   
-        
-      uint32_t offset;
-      uint32_t max = W*H;
+  
+  uint32_t offset;
+  uint32_t max = W*H;
+  
+  for(offset = 0; offset < max; offset ++ )
+    {
       
-      for(offset = 0; offset < max; offset ++ )
-	{
-	  
-	  uint16_t depth = GET11(data[offset]);
-	  
-	  uint16_t pval = t_gamma[depth];
-	  int lb = pval & 0xff;
-	  
-	  /*
-	   * what we really want here is only the closest
-	   * detected objects, so we only look at case 0:
-	   */
-	  uint8_t pixel;// = picture[3*offset];
-	  
-	  if (pval>>8 == 0) {
-	    pixel = 255-lb;
-	  } else {
-	    pixel = 0;
-	  }
-	  
-	  regions[get_region(offset)] += pixel;
-	}
+      uint16_t depth = GET11(data[offset]);
       
-      int i,j;
-      for (i = 0; i < (H / REGION_RES); i++) {
-	
-	for (j = 0; j < (W / REGION_RES); j++) {
-	  
-	  uint64_t region_avg = 
-	    regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
-	  
-	  obstacles[(i * (W / REGION_RES)) + j] = region_avg && 0xFF;
-	  
-	}
-	
+      uint16_t pval = t_gamma[depth];
+      int lb = pval & 0xff;
+      
+      /*
+       * what we really want here is only the closest
+       * detected objects, so we only look at case 0:
+       */
+      uint8_t pixel;// = picture[3*offset];
+      
+      if (pval>>8 == 0) {
+	pixel = 255-lb;
+      } else {
+	pixel = 0;
       }
       
-      free(regions);
+      regions[get_region(offset)] += pixel;
+    }
+  
+  int i,j;
+  for (i = 0; i < (H / REGION_RES); i++) {
+    
+    for (j = 0; j < (W / REGION_RES); j++) {
       
-      return obstacles;
+      uint64_t region_avg = 
+	regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
       
+      //printf("%lld ", region_avg);
+      
+      obstacles[(i * (W / REGION_RES)) + j] = region_avg & 0xFF;
+      
+    }
+    
+    //    printf("\n");
+    
+  }
+
+  //  printf("\n");
+  
+  free(regions);
+  
+  return obstacles;
+  
 }
 
 void *exc_cmd(void* _roomba)
@@ -138,7 +144,10 @@ void *exc_cmd(void* _roomba)
     {
       int err = 0;
       //      err = sem_wait(sem_exc_cmd);
-      pthread_mutex_lock(lock);
+      
+      printf("exc lock \n");
+      pthread_mutex_lock(&_lock);
+      
       if (err != 0) 
 	{
 	  printf("err: %d\n",err);
@@ -154,7 +163,7 @@ void *exc_cmd(void* _roomba)
 	case'w':
 	  roomba_forward(_roomba);
 	  break;
-
+	  
 	case's':
 	  roomba_backward(_roomba);
 	  break;
@@ -201,13 +210,16 @@ void *exc_cmd(void* _roomba)
 	  break;
 	}
       
-      command = 'q';
+      //command = 'q';
       
       //      sem_post(sem_ready_for_cmd);
-      pthread_mutex_unlock(lock);
+      printf("exc unlock\n");
+      pthread_mutex_unlock(&_lock);
       
     }
+
   pthread_exit(NULL);
+
 }
 
 
@@ -215,10 +227,12 @@ int main(int argc, char* argv[])
 {
   printf("yes\n");
   
-  roomba = roomba_init( argv[1] );
+  init();
   
-  pthread_mutex_init(lock, NULL);
-
+  Roomba* roomba = roomba_init( argv[1] );
+  
+  pthread_mutex_init(&_lock, NULL);
+  
   pthread_t texc_cmd;
   pthread_create(&texc_cmd, NULL, exc_cmd, (void*)&roomba);
   
@@ -227,14 +241,77 @@ int main(int argc, char* argv[])
   while(1)
     {
       
-      printf("Getting obstacles\n");
+      //     printf("Getting obstacles\n");
       
       uint8_t* obs = findObstacles();
-
+      
+      uint8_t* cols = calloc ( (W / REGION_RES),
+			       sizeof(uint8_t));
+      
+      //printf("Walking obstacles\n");
+      
+      int i,j;
+      for (i = 0; i < (H / REGION_RES); i++){
+	for (j = 0; j < (W / REGION_RES); j++){
+	  
+	  //printf("checking obstacle %d %d\n", i, j);
+	  
+	  uint8_t region_avg = obs[i * (W / REGION_RES) + j];
+	  
+	  if (region_avg > THRESH) {
+	    cols[j] = 1;
+	  }
+	  
+	  //	  printf("%d ", region_avg);
+	}
+	//	printf("\n");
+      }
+      
+      //printf("Finished with raw obstacles");
+      
       free(obs);
       
-    }
+      printf("Cols: ");
+      
+      uint32_t weight = 0;
+      uint32_t area = 0;
+      uint8_t anyobs = 0;
+      
+      for (i = 0; i < (W / REGION_RES); i++) {
+	if (cols[i]) {
+	  weight += i;
+	  area++;
+	  anyobs = 1;
+	}
+	printf("%d", cols[i]);
+      }
+      printf("\n");
+      
+      double centerofmass = (double)weight/(double)area;
+      
+      char tempcmd = 'q';
+      
+      if (anyobs) {
+	if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
+	  printf("obs right, go LEFT\n");
+	  tempcmd = 'a';
+	} else {
+	  printf("obs left, go RIGHT\n");
+	  tempcmd = 'd';
+	}
+      } else {
+	printf("clear\n");
+	tempcmd = 'w';
+      }
 
+      printf("main lock\n");
+      pthread_mutex_lock(&_lock);
+      command = tempcmd;
+      printf("main unlock\n");
+      pthread_mutex_unlock(&_lock);
+      
+    }
+  
   pthread_join(texc_cmd, NULL);
   
   return 0;

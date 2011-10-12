@@ -9,7 +9,6 @@
  * 14 Dec 2006 - added more functions to roombalib
  */
 
-
 #include <stdio.h>    /* Standard input/output definitions */
 #include <stdint.h>   /* Standard types */
 #include <stdlib.h>   /* calloc, strtol */
@@ -31,31 +30,39 @@ int roomba_init_serialport( const char* serialport, speed_t baud );
 
 Roomba* roomba_init( const char* portpath ) 
 {
-    int fd = roomba_init_serialport( portpath, B57600 );
+  int fd = roomba_init_serialport( portpath, B57600 );
     if( fd == -1 ) return NULL;
     uint8_t cmd[1];
     
     cmd[0] = 128;      // START
     int n = write(fd, cmd, 1);
     if( n!=1 ) {
-        perror("open_port: Unable to write to port ");
-        return NULL;
+      perror("open_port: Unable to write to port ");
+      exit(1);
+      return NULL;
     }
     roomba_delay(COMMANDPAUSE_MILLIS);
+    
+    printf("START\n");
     
     cmd[0] = 130;   // CONTROL
     n = write(fd, cmd, 1);
     if( n!=1 ) {
-        perror("open_port: Unable to write to port ");
-        return NULL;
+      perror("open_port: Unable to write to port ");
+      exit(1);
+      return NULL;
     }
     roomba_delay(COMMANDPAUSE_MILLIS);
-
+    
+    printf("CONTROL\n");
+    
     Roomba* roomba = calloc( 1, sizeof(Roomba) );
     roomba->fd = fd;
     strcpy(roomba->portpath, portpath);
     roomba->velocity = DEFAULT_VELOCITY;
-
+    
+    printf("fd: %d\n", roomba->fd);
+    
     return roomba;
 }
 
