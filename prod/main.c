@@ -115,8 +115,8 @@ void orientToAngle(Roomba* roomba, double targetAngle)
   double diff = angle_diff(targetAngle, posT);
   double abs_diff = (diff < 0) ? -diff : diff;
   
-  printf("target angle:%f posT:%f diff:%f (%f)\n", 
-	 targetAngle, posT, diff, abs_diff);
+  //  printf("target angle:%f posT:%f diff:%f (%f)\n", 
+  //	 targetAngle, posT, diff, abs_diff);
   
   while (abs_diff > UTURN_THRESH)
     {
@@ -139,7 +139,7 @@ void orientToAngle(Roomba* roomba, double targetAngle)
       
       printf("targetAngle:%f posT:%f diff:%f (%f)\n", 
 	     targetAngle, posT, diff, abs_diff);
-      
+      //      
     }
   
   printf("finished turning\n");
