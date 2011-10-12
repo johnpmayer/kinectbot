@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
   pthread_mutex_init(&_lock, NULL);
   
   pthread_t texc_cmd;
-  pthread_create(&texc_cmd, NULL, exc_cmd, (void*)&roomba);
+  pthread_create(&texc_cmd, NULL, exc_cmd, (void*)roomba);
   
   printf("Threads going\n");
   
