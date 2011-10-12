@@ -31,6 +31,7 @@ double posT;
 pthread_mutex_t _lock;
 pthread_mutex_t* lock = &_lock;
 
+Roomba* roomba;
 
 uint32_t get_region(uint32_t offset)
 {
@@ -145,6 +146,8 @@ void *exc_cmd(void* _roomba)
 	  exit(1);
 	}
       
+      printf("exc command: %c\n", command);
+      
       switch(command)
 	{
 	  
@@ -211,5 +214,29 @@ void *exc_cmd(void* _roomba)
 int main(int argc, char* argv[])
 {
   printf("yes\n");
+  
+  roomba = roomba_init( argv[1] );
+  
+  pthread_mutex_init(lock, NULL);
+
+  pthread_t texc_cmd;
+  pthread_create(&texc_cmd, NULL, exc_cmd, (void*)&roomba);
+  
+  printf("Threads going\n");
+  
+  while(1)
+    {
+      
+      printf("Getting obstacles\n");
+      
+      uint8_t* obs = findObstacles();
+
+      free(obs);
+      
+    }
+
+  pthread_join(texc_cmd, NULL);
+  
   return 0;
+  
 }
