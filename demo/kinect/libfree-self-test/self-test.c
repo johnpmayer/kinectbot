@@ -98,6 +98,18 @@ int main()
       uint16_t depth = GET11(data[offset]);
       
       uint16_t pval = t_gamma[depth];
+      
+      /*
+       * pval is what we want -> and only when pVal>>8 is 0 or 1
+       * this gives a maximum pVal we care about at 2^10 - 1, or 1023
+       */
+      
+      if (pval>>9 == 0) {
+	
+	
+	
+      }
+      
       int lb = pval & 0xff;
       
       if ( (offset % REGION_RES == 0) || ((offset/W) % REGION_RES == 0) ) {
