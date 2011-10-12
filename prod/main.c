@@ -18,9 +18,9 @@
 
 #define REGION_RES 40
 
-#define THRESH 100
-#define R_THRESH .26
-#define R_COUNT_THRESH 48
+#define THRESH 120
+#define R_THRESH .25
+#define R_COUNT_THRESH 40
 
 // Globals
 
@@ -401,9 +401,11 @@ int main(int argc, char* argv[])
 	  printf("RED THING!!!!!111\n");
 	  tempcmd = 'p';
 	}
-      
-      //exc_one(roomba, tempcmd);
-      //exc_one(roomba, 'q');
+
+#ifndef FAKE
+      exc_one(roomba, tempcmd);
+      exc_one(roomba, 'q');
+#endif
       
     }
   
