@@ -1,4 +1,4 @@
-CC=gcc -std=c99 -Wall -Werror
+CC=gcc -std=c99 -Wall
 I=-I/usr/local/include/libfreenect
 #L=-L/usr/local/lib
 L=-lfreenect_sync
