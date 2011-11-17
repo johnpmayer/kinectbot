@@ -12,3 +12,4 @@ run-self-test: self-test.c
 
 clean:
 	rm -f run-self-test
+
