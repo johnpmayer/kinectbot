@@ -16,10 +16,16 @@ int main()
   
   while(1) {
     
-    freenect_sync_get_depth( (void**)(&data), 
+    int32_t err = freenect_sync_get_depth( (void**)(&data), 
 			     &timestamp, 
 			     0, 
 			     FREENECT_DEPTH_11BIT );
+    
+    printf("Get depth return code: %" PRIi32 "\n", err);
+    
+    if (err) {
+      return err;
+    }
     
     printf("Got data form depth camera\n");
     
