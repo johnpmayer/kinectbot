@@ -5,11 +5,15 @@ L=-lfreenect_sync
 CC+=${I}
 CC+=${L}
 
-all: run-self-test
+all: run-color
 
-run-self-test: self-test.c bmp.c
-	${CC} -o run-self-test self-test.c ${L}
+#run-self-test: self-test.c bmp.c
+#	${CC} -o run-self-test self-test.c ${L}
+
+run-color: self-test.c bmp.c
+	${CC} -DCOLOR -o run-color self-test.c ${L}
 
 clean:
 	rm -f run-self-test
+	rm -f run-color
 
