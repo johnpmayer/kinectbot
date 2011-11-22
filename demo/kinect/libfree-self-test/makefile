@@ -1,7 +1,7 @@
 CC=gcc -std=c99 -Wall
 I=-I/usr/local/include/libfreenect
 #L=-L/usr/local/lib
-L=-lfreenect_sync
+L=-lfreenect_sync -lm
 CC+=${I}
 CC+=${L}
 
