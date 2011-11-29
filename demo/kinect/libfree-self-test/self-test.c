@@ -3,6 +3,7 @@
 #include <libfreenect_sync.h>
 #include <inttypes.h>
 #include <math.h>
+#include <ncurses.h>
 
 #include "bmp.c"
 
@@ -49,13 +50,19 @@ void init(void) {
 int main()
 {
   
+  int exit_code = 0;
+  
   init();
+  WINDOW* win;
+
+  if ((win= initscr()) == NULL) {
+    printf("can't init ncurses");
+    return 1;
+  }
   
-  
-  
-  printf("Start\n");  
-  
-  //uint64_t movAvg[3] = {0,0,0};
+  //printf("Start\n");  
+  mvaddstr(3,3,"Start\n");
+  refresh();
   
   do {
     
@@ -71,18 +78,14 @@ int main()
 			     0, 
 			     FREENECT_DEPTH_11BIT );
     
-    //printf("Get depth return code: %" PRIi32 "\n", err);
-    
     if (err) {
       printf("can't access kinect\n");
-      return err;
+      exit_code = 1;
+      break;
     }
-    
-    //printf("Got data form depth camera\n");
     
     uint32_t offset;
     uint32_t max = W*H;
-    //uint64_t sum = 0;
     
     for(offset = 0; offset < max; offset ++ ){
       
@@ -98,7 +101,6 @@ int main()
 	picture[3*offset+2] = -1;
       } else if (depth < 2047) {
 	
-#ifdef COLOR
         switch (pval>>8) {
 	case 0:
 	  picture[3*offset+0] = 255;
@@ -136,65 +138,54 @@ int main()
 	  picture[3*offset+2] = 0;
 	  break;
 	  }
-#else
-	
-	picture[3*offset] = pval >> 3;
-	picture[3*offset+1] = pval >> 3;
-	picture[3*offset+2] = pval >> 3;
-	
-#endif
 	
       }
       
-#ifdef COLOR
-      /* grep red-scale */
       picture[3*offset+1] = picture[3*offset];
       picture[3*offset+2] = picture[3*offset];
-#endif
       
       uint8_t pixel = picture[3*offset];
       regions[get_region(offset)] += pixel;
-      //picture[3*offset];
-      
-      //printf("%" PRIx32 ":\t%" PRIu16 "\n", offset, data[offset]);
-      
-      //sum += data[offset];
-      
-      //sum += depth;
-      
+
     }
     
-    /*
-    movAvg[0] = movAvg[1];
-    movAvg[1] = movAvg[2];
-    movAvg[2] = sum / max;
-    
-    printf("Avg: %" PRIu64 "\n", 
-	   (movAvg[0]+movAvg[1]+movAvg[2])/3
-	    );
-    */
-    
-    //printf("Regions:\n");
     int obstacle = 0;
     int i,j;
-    for (i = 0; !obstacle && i < (H / REGION_RES); i++) {
-      for (j = 0; !obstacle && j < (W / REGION_RES); j++) {
+    int base_row = 7;
+    int base_col = 5;
+    for (i = 0; i < (H / REGION_RES); i++) {
+      
+      mvaddstr(base_row + 2 * i, base_col, "|");
+      
+      for (j = 0; j < (W / REGION_RES); j++) {
 	
-	uint64_t region_avg = regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
-	if (region_avg > THRESH){
+	uint64_t region_avg = 
+	  regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
+	
+	char* cursesChar = " ";
+	
+	if (region_avg > THRESH) {
 	  obstacle = 1;
+	  cursesChar = "@";
 	}
-	//printf("%" PRIu64 "\t", region_avg);
+	
+	mvaddstr(base_row + 2 * i,
+		 base_col + 4 * (j+1),
+		 cursesChar);
+	
 	
       }
-      //printf("\n");
+      
+      mvaddstr(base_row + 2 * i, base_col + 4 * ((W/REGION_RES)+1), "|");
+
     }
     
     if(obstacle) {
-      printf("WARNING!\n");
+      mvaddstr(5,3,"WARNING!\n");
     } else {
-      printf("Safe....\n");
+      mvaddstr(5,3,"Safe....\n");
     }
+    refresh();
     
     free(picture);
     free(regions);
@@ -207,6 +198,9 @@ int main()
   
   //write_bmp("output.bmp", W, H, picture);
   
-  return 0;
+  delwin(win);
+  endwin();
+  refresh();
+  return exit_code;
   
 }
