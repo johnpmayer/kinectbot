@@ -4,7 +4,7 @@ VERSION = 1.0
 DISTNAME = $(NAME)-$(VERSION)
 
 
-CFLAGS = -Wall -I.
+CFLAGS = -Wall -I. -lpthread
 CC = gcc
 
 BINARIES = roombacmd simpletest
