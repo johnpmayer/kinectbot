@@ -20,6 +20,10 @@
 /*'a':Move left */
 /*'d':Move right*/
 /*'p':Stop*/
+/*'e':exit*/
+//"q": query
+// distance offset 12-13
+//angle offset 14-15
 typedef struct
 {
 	char		command;
@@ -67,6 +71,11 @@ void *exc_cmd(void* _roomba)
 				roomba_stop(_roomba);
 				pthread_exit(NULL);
 				break;
+			case'q':
+				roomba_read_sensors(_roomba);
+				uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
+				printf("distance: %.4x\n",    (sb[12]<<8) | sb[13] );
+    		printf("angle: %.4x\n",       (sb[14]<<8) | sb[15] );
 			default:
 				break;
 		}
