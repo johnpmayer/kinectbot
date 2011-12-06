@@ -169,7 +169,7 @@ void *get_cmd(void* _roomba)
   pthread_exit(NULL);
 }
 
-// void* more stuff
+#ifdef SIMPLE_MAIN
 
 int main(int argc, char *argv[]) 
 {
@@ -220,3 +220,4 @@ int main(int argc, char *argv[])
   return 0;
 }
 
+#endif
