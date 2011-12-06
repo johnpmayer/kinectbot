@@ -102,7 +102,7 @@ void *get_cmd(void* _roomba)
     {
       sem_wait(&sem_ready_for_cmd);
       input = getchar();
-      getchar();// filter the enter button
+      //getchar();// filter the enter button
       printf("recv command : %c\n", input);
       cmd.command = input;
       sem_post(&sem_exc_cmd);
@@ -126,7 +126,8 @@ int main(int argc, char *argv[])
   
   roombadebug = 1;
   
-  Roomba* roomba = roomba_init( serialport );    
+  Roomba* roomba = roomba_init( serialport );
+  
   sem_init(&sem_exc_cmd, 0, 0);
   sem_init(&sem_ready_for_cmd, 0, 1);
   
