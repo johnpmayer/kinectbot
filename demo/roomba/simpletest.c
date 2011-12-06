@@ -26,13 +26,23 @@ typedef struct
 	int			duration;
 }Roomba_Command;
 
+typedef struct position
+{
+  double x;
+  double y;
+  double theta;
+} position_t; 
+  
 Roomba_Command cmd;
 int cur_cmd = 0;
 sem_t sem_exc_cmd;
 //sem_t sem_get_cmd;
 
+sem_t ready_cmd;
+
 void *exc_cmd(void* _roomba)
 {
+  
 	while(1)
 	{
 		sem_wait(&sem_exc_cmd);
