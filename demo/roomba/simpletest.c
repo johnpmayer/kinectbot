@@ -14,6 +14,13 @@
 #include "roombalib.h"
 #include <semaphore.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <inttypes.h>
+#include <math.h>
+
+#define PI 3.1415926
+
+#define NANOS_PER_MS(n) (n*1000000)
 
 /*'w':Move forward*/
 /*'s':Move backward*/
@@ -28,30 +35,41 @@
 typedef struct
 {
   char command;
-  int duration;
+  //  int duration;
 } Roomba_Command;
 
-typedef struct position
+typedef struct
 {
-  double x;
-  double y;
-  double theta;
+  double x; // mm
+  double y; // mm 
+  double theta; // radians
 } position_t; 
 
+position_t pos;
+
 Roomba_Command cmd;
-int cur_cmd = 0;
-sem_t sem_exc_cmd;
-sem_t sem_ready_for_cmd;
+
+pthread_mutex_t _lock;
+pthread_mutex_t* lock = &_lock;
 
 void *exc_cmd(void* _roomba)
 {
   
   while(1)
     {
-      sem_wait(&sem_exc_cmd);
+      int err = 0;
+      //      err = sem_wait(sem_exc_cmd);
+      pthread_mutex_lock(lock);
+      if (err != 0) 
+	{
+	  printf("err: %d\n",err);
+	  perror("exc sem wait");
+	  exit(1);
+	}
       
       switch(cmd.command)
 	{
+	  
 	case'w':
 	  roomba_forward(_roomba);
 	  break;
@@ -76,20 +94,36 @@ void *exc_cmd(void* _roomba)
 	  roomba_stop(_roomba);
 	  pthread_exit(NULL);
 	  break;
-
-	case'q':
+	  
+	default:
+	  
+	  // sleep
+	  roomba_delay(100);
+	  
 	  roomba_read_sensors(_roomba);
 	  uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
-	  printf("distance: %.4x\n",    (sb[12]<<8) | sb[13] );
-	  printf("angle: %.4x\n",       (sb[14]<<8) | sb[15] );
+	  
+	  int16_t dist_i  = (sb[12]<<8) | sb[13];
+	  int16_t angle_i = (sb[14]<<8) | sb[15]; // in degrees
+	  
+	  double dist = dist_i;
+	  double angle = angle_i / 360.0 * 2.0 * PI;
+	  
+	  pos.theta += angle;
+	  
+	  pos.x += dist * cos(pos.theta);
+	  pos.y += dist * sin(pos.theta);
+	  
+	  /*printf("delta dist: %f"  " delta angle: %f"  "\n",
+	    dist,angle);*/
+	  
 	  break;
-
-	default:
-	  break;
-
 	}
       
-      sem_post(&sem_ready_for_cmd);
+      cmd.command = 'q';
+      
+      //      sem_post(sem_ready_for_cmd);
+      pthread_mutex_unlock(lock);
       
     }
   pthread_exit(NULL);
@@ -97,15 +131,40 @@ void *exc_cmd(void* _roomba)
 
 void *get_cmd(void* _roomba)
 {
-  char input;
+  char buf[16];
   while(1)
     {
-      sem_wait(&sem_ready_for_cmd);
-      input = getchar();
-      //getchar();// filter the enter button
+
+      
+      // sem_wait(sem_ready_for_cmd);
+      // input = getchar();
+      // getchar(); 
+      // filter the enter button
+      
+      read(0, buf, 16);
+      char input = buf[0];
+      
       printf("recv command : %c\n", input);
-      cmd.command = input;
-      sem_post(&sem_exc_cmd);
+      
+      if (input == 'q')
+	{
+	  printf("x: %f y: %f theta: %f\n", pos.x, pos.y, pos.theta);
+	}
+      else if (input == 'r')
+	{
+	  pthread_mutex_lock(lock);
+	  pos.x = 0.0;
+	  pos.y = 0.0;
+	  pos.theta = 0.0;
+	  pthread_mutex_unlock(lock);
+	}
+      else
+	{
+	  pthread_mutex_lock(lock);
+	  cmd.command = input;
+	  pthread_mutex_unlock(lock);
+	}
+
     }
   pthread_exit(NULL);
 }
@@ -128,8 +187,9 @@ int main(int argc, char *argv[])
   
   Roomba* roomba = roomba_init( serialport );
   
-  sem_init(&sem_exc_cmd, 0, 0);
-  sem_init(&sem_ready_for_cmd, 0, 1);
+  ret = 0;
+  ret=pthread_mutex_init(lock, NULL);
+  if(ret) perror("mutex init");
   
   pthread_t tget_cmd, texc_cmd;
   
@@ -147,10 +207,15 @@ int main(int argc, char *argv[])
       exit(-1);
     }
 
+  printf("threads go");
+  
   pthread_join(texc_cmd, NULL);
   
   roomba_close( roomba );
   roomba_free( roomba );
+  
+  //  sem_close(sem_exc_cmd);
+  //  sem_close(sem_ready_for_cmd);
   
   return 0;
 }
