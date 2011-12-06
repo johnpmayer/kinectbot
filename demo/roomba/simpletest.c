@@ -24,11 +24,12 @@
 //"q": query
 // distance offset 12-13
 //angle offset 14-15
+
 typedef struct
 {
-	char		command;
-	int			duration;
-}Roomba_Command;
+  char command;
+  int duration;
+} Roomba_Command;
 
 typedef struct position
 {
@@ -36,104 +37,120 @@ typedef struct position
   double y;
   double theta;
 } position_t; 
-  
+
 Roomba_Command cmd;
 int cur_cmd = 0;
 sem_t sem_exc_cmd;
-//sem_t sem_get_cmd;
-
-sem_t ready_cmd;
+sem_t sem_ready_for_cmd;
 
 void *exc_cmd(void* _roomba)
 {
   
-	while(1)
+  while(1)
+    {
+      sem_wait(&sem_exc_cmd);
+      
+      switch(cmd.command)
 	{
-		sem_wait(&sem_exc_cmd);
-		switch(cmd.command)
-		{
-			case'w':
-				roomba_forward(_roomba);
-				break;
-			case's':
-				roomba_backward(_roomba);
-				break;
-			case'a':
-				roomba_spinleft(_roomba);
-				break;
-			case'd':
-				roomba_spinright(_roomba);
-				break;
-			case'p':
-				roomba_stop(_roomba);
-				break;
-			case'e':
-				roomba_stop(_roomba);
-				pthread_exit(NULL);
-				break;
-			case'q':
-				roomba_read_sensors(_roomba);
-				uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
-				printf("distance: %.4x\n",    (sb[12]<<8) | sb[13] );
-    		printf("angle: %.4x\n",       (sb[14]<<8) | sb[15] );
-			default:
-				break;
-		}
+	case'w':
+	  roomba_forward(_roomba);
+	  break;
+
+	case's':
+	  roomba_backward(_roomba);
+	  break;
+
+	case'a':
+	  roomba_spinleft(_roomba);
+	  break;
+
+	case'd':
+	  roomba_spinright(_roomba);
+	  break;
+
+	case'p':
+	  roomba_stop(_roomba);
+	  break;
+
+	case'e':
+	  roomba_stop(_roomba);
+	  pthread_exit(NULL);
+	  break;
+
+	case'q':
+	  roomba_read_sensors(_roomba);
+	  uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
+	  printf("distance: %.4x\n",    (sb[12]<<8) | sb[13] );
+	  printf("angle: %.4x\n",       (sb[14]<<8) | sb[15] );
+	  break;
+
+	default:
+	  break;
+
 	}
-	pthread_exit(NULL);
+      
+      sem_post(&sem_ready_for_cmd);
+      
+    }
+  pthread_exit(NULL);
 }
 
 void *get_cmd(void* _roomba)
 {
-	char input;
-	while(1)
-	{
-		input = getchar();
-		getchar();// filter the enter button
-		printf("recv command :%c\n", input);
-		cmd.command = input;
-		sem_post(&sem_exc_cmd);
-	}
-	pthread_exit(NULL);
+  char input;
+  while(1)
+    {
+      sem_wait(&sem_ready_for_cmd);
+      input = getchar();
+      getchar();// filter the enter button
+      printf("recv command : %c\n", input);
+      cmd.command = input;
+      sem_post(&sem_exc_cmd);
+    }
+  pthread_exit(NULL);
 }
+
+// void* more stuff
 
 int main(int argc, char *argv[]) 
 {
-    char* serialport;
-		int ret;
-
-    if( argc>1 && strcmp(argv[1],"-p" )==0 ) {
-        serialport = argv[2];
-    } else {
-        fprintf(stderr,"usage: simpletst -p serialport\n");
-        return 0;
+  char* serialport;
+  int ret;
+  
+  if( argc>1 && strcmp(argv[1],"-p" )==0 ) {
+    serialport = argv[2];
+  } else {
+    fprintf(stderr,"usage: simpletst -p serialport\n");
+    return 0;
+  }
+  
+  roombadebug = 1;
+  
+  Roomba* roomba = roomba_init( serialport );    
+  sem_init(&sem_exc_cmd, 0, 0);
+  sem_init(&sem_ready_for_cmd, 0, 1);
+  
+  pthread_t tget_cmd, texc_cmd;
+  
+  ret=pthread_create(&tget_cmd,NULL,get_cmd,(void *)roomba);
+  if(ret)
+    {
+      printf("ERROR;return code is %d\n",ret);
+      exit(-1);
+    }    
+  
+  ret=pthread_create(&texc_cmd,NULL,exc_cmd,(void *)roomba);
+  if(ret)
+    {
+      printf("ERROR;return code is %d\n",ret);
+      exit(-1);
     }
 
-    roombadebug = 1;
-
-    Roomba* roomba = roomba_init( serialport );    
-    sem_init(&sem_exc_cmd, 0, 0);
-		
-		pthread_t tget_cmd, texc_cmd;
-		ret=pthread_create(&tget_cmd,NULL,get_cmd,(void *)roomba);
-		if(ret)
-		{
-			printf("ERROR;return code is %d\n",ret);
-			exit(-1);
-		}    
-		ret=pthread_create(&texc_cmd,NULL,exc_cmd,(void *)roomba);
-		if(ret)
-		{
-			printf("ERROR;return code is %d\n",ret);
-			exit(-1);
-		}
-
-		pthread_join(texc_cmd, NULL);
-
-    roomba_close( roomba );
-    roomba_free( roomba );
-	
-    return 0;
+  pthread_join(texc_cmd, NULL);
+  
+  roomba_close( roomba );
+  roomba_free( roomba );
+  
+  return 0;
 }
-
 
