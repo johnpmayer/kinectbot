@@ -5,7 +5,10 @@ L=-lfreenect_sync
 SRC=main.c
 SRC+=../roomba/roombalib.c
 
-all: system
+all: clean system
 
 system: main.c
 	${CC} -o system ${SRC} ${L}
+
+clean:
+	rm -f system

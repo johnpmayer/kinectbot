@@ -44,6 +44,8 @@ void init(void) {
 }
 
 uint8_t* getRegionObstacles() {
+
+  if (!isInit) init();
   
   uint16_t* data;
   char* picture = calloc(W*H*3, sizeof(uint8_t));
@@ -129,19 +131,23 @@ uint8_t* getRegionObstacles() {
     
   }
   
-  int i;
-  for (i = 0; i < (H / REGION_RES) * (W / REGION_RES); i++) 
+  int i,j;
+  
+  for (i = 0; i < (H / REGION_RES); i++) 
     {
-      
-      
-      uint64_t region_avg = 
-	regions[i] / pow(REGION_RES, 2);
-      
-      if (region_avg > THRESH)
+      for (j = 0; j < (W / REGION_RES); j++) 
 	{
-	obstacles[i] = 1;
+	  
+	  uint64_t region_avg = 
+	    regions[(i * (W / REGION_RES)) + j] 
+	    / pow(REGION_RES, 2);
+	  
+	  if (region_avg > THRESH)
+	    {
+	      obstacles[(i * (W / REGION_RES)) + j] = 1;
+	    }
+	  
 	}
-      
     }
   
   free(picture);
