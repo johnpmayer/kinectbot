@@ -49,6 +49,8 @@ void init(void) {
 
 int main()
 {
+
+  printf("Start");
   
   int exit_code = 0;
   

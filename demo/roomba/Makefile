@@ -6,6 +6,7 @@ DISTNAME = $(NAME)-$(VERSION)
 
 CFLAGS = -Wall -I. -lpthread
 CC = gcc -DSIMPLE_MAIN
+L=-lm -lpthread
 
 BINARIES = roombacmd simpletest
 #BINARIES = simpletest
@@ -20,7 +21,7 @@ clean:
 	$(CC) $(CFLAGS) -o $@ $@.c 
 
 simpletest: simpletest.c roombalib.c
-	$(CC) $(CFLAGS) $^ -o $@ 
+	$(CC) $(CFLAGS) $^ -o $@ $L
 
 roombacmd: roombacmd.c roombalib.c
 	$(CC) $(CFLAGS) $^ -o $@ 
