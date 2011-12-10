@@ -1,6 +1,10 @@
 
-#include <unistd.h>
 #include <stdint.h>
+#include <pthread.h>
+
+#include "depth_regions.c"
+#include "simpletest.c"
+#include "roombalib.c"
 
 uint8_t* obstacleGrid;
 
@@ -21,7 +25,7 @@ int main(int argc, char* argv[]) {
   if (ret) 
     {
       perror("mutex init");
-      exit(1);
+      _exit(1);
     }
   
   ret = 0;
@@ -30,7 +34,7 @@ int main(int argc, char* argv[]) {
   if (ret)
     {
       perror("create exc task");
-      exit(1);
+      _exit(1);
     }
   
   while(1)
@@ -103,11 +107,13 @@ int main(int argc, char* argv[]) {
       
       pthread_mutex_lock(lock);
       
+      /*
       double x,y,theta;
       
       x = pos.x;
       y = pos.y;
       theta = pos.theta;
+      */
       
       if (!obstacle) 
 	{

@@ -20,8 +20,7 @@
 #include <termios.h>  /* POSIX terminal control definitions */
 #include <sys/ioctl.h>
 
-#include <unistd.h>
-#include <pthread.h>
+#define CRTSCTS   020000000000  /* flow control */
 
 #include "roombalib.h"
 
@@ -286,7 +285,7 @@ int roomba_init_serialport( const char* serialport, speed_t baud )
     toptions.c_cflag |= CS8;
     // no flow control
     toptions.c_cflag &= ~CRTSCTS;
-
+    
     toptions.c_cflag    |= CREAD | CLOCAL;  // turn on READ & ignore ctrl lines
     toptions.c_iflag    &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
 

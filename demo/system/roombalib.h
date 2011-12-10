@@ -9,6 +9,8 @@
  * 14 Dec 2006 - added more functions to roombalib
  */
 
+#ifndef ROOMBALIBH
+#define ROOMBALIBH
 
 #include <stdint.h>   /* Standard types */
 
@@ -116,3 +118,4 @@ void roomba_delay( int millisecs );
 #define motorover_driveright(b) ((b & 0x08)!=0) 
 #define motorover_driveleft(b)  ((b & 0x10)!=0) 
 
+#endif
