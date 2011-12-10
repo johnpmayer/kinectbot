@@ -81,9 +81,12 @@ int main()
 			     FREENECT_DEPTH_11BIT );
     
     if (err) {
+      delwin(win);
+      endwin();
+      refresh();
+
       printf("can't access kinect\n");
-      exit_code = 1;
-      break;
+      exit(1);
     }
     
     uint32_t offset;
