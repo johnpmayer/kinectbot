@@ -13,7 +13,7 @@
 #define W 640
 #define H 480
 
-#define REGION_RES 80
+#define REGION_RES 40
 
 // some value between 0 and 255
 #define THRESH 200
