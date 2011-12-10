@@ -20,7 +20,9 @@
 #include <termios.h>  /* POSIX terminal control definitions */
 #include <sys/ioctl.h>
 
+#ifndef CRTSCTS
 #define CRTSCTS   020000000000  /* flow control */
+#endif
 
 #include "roombalib.h"
 
