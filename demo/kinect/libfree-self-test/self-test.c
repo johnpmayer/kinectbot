@@ -16,7 +16,9 @@
 #define REGION_RES 40
 
 // some value between 0 and 255
-#define THRESH 200
+// this can be pretty low, since we're already accounting for the
+// 3 most significant bits of the 11-bit depth value
+#define THRESH 150
 
 #define LOOP 1
 
@@ -167,7 +169,7 @@ int main()
       free(regions);
       
     } while (LOOP);
-    
+  
   delwin(win);
   endwin();
   refresh();
