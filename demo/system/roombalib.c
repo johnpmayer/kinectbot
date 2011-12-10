@@ -21,6 +21,7 @@
 #include <sys/ioctl.h>
 
 #include <unistd.h>
+#include <pthread.h>
 
 #include "roombalib.h"
 

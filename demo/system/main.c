@@ -1,8 +1,6 @@
 
-
-#include "../roomba/simpletest.c"
-#include "../kinect/regions/depth_regions.c"
-//#include "../roomba/roombalib.c"
+#include <unistd.h>
+#include <stdint.h>
 
 uint8_t* obstacleGrid;
 
