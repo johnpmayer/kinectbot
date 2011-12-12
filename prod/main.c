@@ -18,7 +18,7 @@
 
 #define REGION_RES 40
 
-#define THRESH 150
+#define THRESH 100
 
 // Globals
 
@@ -169,11 +169,11 @@ void *exc_cmd(void* _roomba)
 	  break;
 
 	case'a':
-	  roomba_spinleft(_roomba);
+	  roomba_spinleft_at(_roomba,100);
 	  break;
 
 	case'd':
-	  roomba_spinright(_roomba);
+	  roomba_spinright_at(_roomba,100);
 	  break;
 
 	case'p':
@@ -305,10 +305,10 @@ int main(int argc, char* argv[])
       }
 
       printf("main lock\n");
-      pthread_mutex_lock(&_lock);
+      //pthread_mutex_lock(&_lock);
       command = tempcmd;
       printf("main unlock\n");
-      pthread_mutex_unlock(&_lock);
+      //pthread_mutex_unlock(&_lock);
       
     }
   
