@@ -18,9 +18,9 @@
 
 #define REGION_RES 40
 
-#define THRESH 120
-#define R_THRESH .25
-#define R_COUNT_THRESH 40
+#define THRESH 175
+#define R_THRESH .23
+#define R_COUNT_THRESH 32
 
 // Globals
 
