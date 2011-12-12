@@ -19,10 +19,12 @@
 #define REGION_RES 40
 
 #define THRESH 100
+#define R_THRESH .26
+#define R_COUNT_THRESH 48
 
 // Globals
 
-char command;
+//char command;
 
 double posX;
 double posY;
@@ -60,8 +62,111 @@ void init(void) {
   }
 }
 
-uint8_t* findObstacles() {
+int getRedCount() {
+  uint8_t* data;
+      
+  double* regions = calloc( (W / REGION_RES) * (H / REGION_RES), 
+			    sizeof(double) );
   
+  uint32_t timestamp;
+  
+  int32_t err = freenect_sync_get_video( (void**)(&data), 
+					 &timestamp, 
+					 0, 
+					 FREENECT_VIDEO_RGB );
+  
+  if (err) {
+    
+    printf("can't access kinect\n");
+    exit(1);
+  }
+
+  // pull distance, calc dot product, etc
+  uint32_t offset;
+  uint32_t max = W*H;
+  
+  for(offset = 0; offset < max; offset += 3 )
+    {
+      
+      double r = data[offset];
+      double g = data[offset+1];
+      double b = data[offset+2];
+      
+      /*
+       * dot prod
+       */
+      double cosT = 
+	r /
+	sqrt( pow(r,2) + pow(g,2) + pow(b,2) );
+      
+      regions[get_region(offset)] += cosT;
+      
+    }
+  
+  int red_regions = 0;
+  int i,j;
+  //int base_row = 7;
+  //int base_col = 5;
+  for (i = 0; i < (H / REGION_RES); i++) {
+    
+    //mvaddstr(base_row + 3 * i, base_col, "|");
+    
+    for (j = 0; j < (W / REGION_RES); j++) {
+      
+      double region_avg = 
+	regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
+      
+      //char buf[16];
+      
+      if (region_avg > R_THRESH) 
+	{
+	  //obstacle = 1;
+	  red_regions ++;
+	  //sprintf(buf, "(%.2f)    ", region_avg);
+	}
+      else
+	{
+	  //sprintf(buf, "%.2f    ", region_avg);
+	}
+      
+      /*
+	mvaddstr( base_row + 3 * i,
+	base_col + 6 * (j+1),
+	buf );
+      */
+      
+      
+    }
+    
+    /*
+      mvaddstr( base_row + 3 * i, 
+      base_col + 6 * ((W/REGION_RES)+1), 
+      "|");
+    */
+  }
+  
+  /*
+    char buf[8];
+    
+    sprintf(buf, "%d    ", red_regions);
+    mvaddstr(5,3,buf);
+    
+    if(obstacle) {
+    mvaddstr(5,3,"WARNING!\n");
+    } else {
+    mvaddstr(5,3,"Safe....\n");
+    }
+  */
+  
+  //refresh();
+      
+  free(regions);
+  
+  return red_regions;
+  
+}
+
+uint8_t* findObstacles() {
   
   uint16_t* data;
   
@@ -136,92 +241,74 @@ uint8_t* findObstacles() {
   return obstacles;
   
 }
-
-void *exc_cmd(void* _roomba)
+void exc_one(Roomba* _roomba, char command)
 {
   
-  while(1)
+  int err = 0;
+  
+  if (err != 0) 
     {
-      int err = 0;
-      //      err = sem_wait(sem_exc_cmd);
-      
-      printf("exc lock \n");
-      pthread_mutex_lock(&_lock);
-      
-      if (err != 0) 
-	{
-	  printf("err: %d\n",err);
-	  perror("exc sem wait");
-	  exit(1);
-	}
-      
-      printf("exc command: %c\n", command);
-      
-      switch(command)
-	{
-	  
-	case'w':
-	  roomba_forward(_roomba);
-	  break;
-	  
-	case's':
-	  roomba_backward(_roomba);
-	  break;
-
-	case'a':
-	  roomba_spinleft_at(_roomba,100);
-	  break;
-
-	case'd':
-	  roomba_spinright_at(_roomba,100);
-	  break;
-
-	case'p':
-	  roomba_stop(_roomba);
-	  break;
-
-	case'e':
-	  roomba_stop(_roomba);
-	  pthread_exit(NULL);
-	  break;
-	  
-	default:
-	  
-	  // sleep
-	  roomba_delay(100);
-	  
-	  roomba_read_sensors(_roomba);
-	  uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
-	  
-	  int16_t dist_i  = (sb[12]<<8) | sb[13];
-	  int16_t angle_i = (sb[14]<<8) | sb[15]; // in degrees
-	  
-	  double dist = dist_i;
-	  double angle = angle_i / 360.0 * 2.0 * PI;
-	  
-	  posT += angle;
-	  
-	  posX += dist * cos(posT);
-	  posY += dist * sin(posT);
-	  
-	  /*printf("delta dist: %f"  " delta angle: %f"  "\n",
-	    dist,angle);*/
-	  
-	  break;
-	}
-      
-      //command = 'q';
-      
-      //      sem_post(sem_ready_for_cmd);
-      printf("exc unlock\n");
-      pthread_mutex_unlock(&_lock);
-      
+      printf("err: %d\n",err);
+      perror("exc sem wait");
+      exit(1);
     }
+  
+  printf("exc command: %c\n", command);
+  
+  switch(command)
+    {
+      
+    case'w':
+      roomba_forward(_roomba);
+      break;
+      
+    case's':
+      roomba_backward(_roomba);
+      break;
+      
+    case'a':
+      roomba_spinleft_at(_roomba,100);
+      break;
+      
+    case'd':
+      roomba_spinright_at(_roomba,100);
+      break;
+      
+    case'p':
+      roomba_stop(_roomba);
+      break;
+      
+    case'e':
+      roomba_stop(_roomba);
+      pthread_exit(NULL);
+      break;
+      
+    default:
+      
+      // sleep
+      roomba_delay(100);
+      
+      roomba_read_sensors(_roomba);
+      uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
+      
+      int16_t dist_i  = (sb[12]<<8) | sb[13];
+      int16_t angle_i = (sb[14]<<8) | sb[15]; // in degrees
+      
+      double dist = dist_i;
+      double angle = angle_i / 360.0 * 2.0 * PI;
+      
+      posT += angle;
+      
+      posX += dist * cos(posT);
+      posY += dist * sin(posT);
+      
+      break;
+    }
+  
+  printf("exc unlock\n");
 
-  pthread_exit(NULL);
-
+  
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -231,12 +318,15 @@ int main(int argc, char* argv[])
   
   Roomba* roomba = roomba_init( argv[1] );
   
-  pthread_mutex_init(&_lock, NULL);
+  /*
+    pthread_mutex_init(&_lock, NULL);
+    pthread_t texc_cmd;
+    pthread_create(&texc_cmd, NULL, exc_cmd, (void*)roomba);
+  */
   
-  pthread_t texc_cmd;
-  pthread_create(&texc_cmd, NULL, exc_cmd, (void*)roomba);
+  //printf("Threads going\n");
   
-  printf("Threads going\n");
+  printf("Start loop");
   
   while(1)
     {
@@ -289,6 +379,8 @@ int main(int argc, char* argv[])
       
       double centerofmass = (double)weight/(double)area;
       
+      int red_count = getRedCount();
+      
       char tempcmd = 'q';
       
       if (anyobs) {
@@ -303,16 +395,19 @@ int main(int argc, char* argv[])
 	printf("clear\n");
 	tempcmd = 'w';
       }
-
-      printf("main lock\n");
-      //pthread_mutex_lock(&_lock);
-      command = tempcmd;
-      printf("main unlock\n");
-      //pthread_mutex_unlock(&_lock);
+      
+      if (red_count > R_COUNT_THRESH)
+	{
+	  printf("RED THING!!!!!111\n");
+	  tempcmd = 'p';
+	}
+      
+      //exc_one(roomba, tempcmd);
+      //exc_one(roomba, 'q');
       
     }
   
-  pthread_join(texc_cmd, NULL);
+  //pthread_join(texc_cmd, NULL);
   
   return 0;
   
