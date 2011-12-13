@@ -19,7 +19,7 @@
 #define REGION_RES 40
 
 #define THRESH 175
-#define R_THRESH .23
+#define R_THRESH .25
 #define R_COUNT_THRESH 32
 
 // Globals
@@ -33,6 +33,35 @@ double posT;
 pthread_mutex_t _lock;
 //pthread_mutex_t* lock = &_lock;
 
+void waitRoombaPlayBtnPush(Roomba* _roomba)
+{
+	printf("Wait for Play Button to be pushed!\n");
+	while(1)
+	{
+		roomba_read_sensors(_roomba );
+		roomba_delay(COMMANDPAUSE_MILLIS);
+		if((_roomba->sensor_bytes[11]&0x01) == 1)
+		{
+			printf("Play Button Pushed!\n");
+			return;
+		}
+	}
+}
+
+void waitRoombaAdvanceBtnPush(Roomba* _roomba)
+{
+	printf("Wait for Advance Button to be pushed!\n");
+	while(1)
+	{
+		roomba_read_sensors(_roomba );
+		roomba_delay(COMMANDPAUSE_MILLIS);
+		if(_roomba->sensor_bytes[11] == 4)
+		{
+			printf("Advance Button Pushed!\n");
+			return;
+		}
+	}
+}
 //Roomba* roomba;
 
 uint32_t get_region(uint32_t offset)
@@ -267,11 +296,11 @@ void exc_one(Roomba* _roomba, char command)
       break;
       
     case'a':
-      roomba_spinleft_at(_roomba,100);
+      roomba_spinleft_at(_roomba,120);
       break;
       
     case'd':
-      roomba_spinright_at(_roomba,100);
+      roomba_spinright_at(_roomba,120);
       break;
       
     case'p':
@@ -280,7 +309,7 @@ void exc_one(Roomba* _roomba, char command)
       
     case'e':
       roomba_stop(_roomba);
-      pthread_exit(NULL);
+      //pthread_exit(NULL);
       break;
       
     default:
@@ -317,7 +346,7 @@ int main(int argc, char* argv[])
   init();
   
   Roomba* roomba = roomba_init( argv[1] );
-  
+  roomba_set_velocity(roomba, 400);
   /*
     pthread_mutex_init(&_lock, NULL);
     pthread_t texc_cmd;
@@ -325,9 +354,10 @@ int main(int argc, char* argv[])
   */
   
   //printf("Threads going\n");
-  
-  printf("Start loop");
-  
+	waitRoombaPlayBtnPush(roomba);
+  printf("Start loop\n");
+
+  //search for the object
   while(1)
     {
       
@@ -406,9 +436,25 @@ int main(int argc, char* argv[])
       exc_one(roomba, tempcmd);
       exc_one(roomba, 'q');
 #endif
-      
-    }
-  
+  }
+  roomba_play_note(roomba, 57, 32);
+	roomba_delay(100);
+	roomba_play_note(roomba, 59, 32);
+	roomba_delay(100);
+	roomba_play_note(roomba, 60, 32);
+	roomba_delay(100);
+	roomba_play_note(roomba, 64, 32);
+	roomba_delay(100);
+	waitRoombaAdvanceBtnPush(roomba);
+	//turn around to return
+	double return_angle = 180 - posT;
+	while(posT != return_angle)
+	{
+		exc_one(roomba, 'a');
+		exc_one(roomba, 'q');
+	}
+	//ToDo:return and search
+
   //pthread_join(texc_cmd, NULL);
   
   return 0;
