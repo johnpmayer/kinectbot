@@ -22,18 +22,16 @@
 #define R_THRESH .23
 #define R_COUNT_THRESH 32
 
-// Globals
+#define MODE_SEEK 0
+#define MODE_UTURN 1
+#define MODE_RETURN 2
+#define MODE_FINISH 3
 
-//char command;
+// Globals
 
 double posX;
 double posY;
 double posT;
-
-pthread_mutex_t _lock;
-//pthread_mutex_t* lock = &_lock;
-
-//Roomba* roomba;
 
 uint32_t get_region(uint32_t offset)
 {
@@ -105,61 +103,22 @@ int getRedCount() {
   
   int red_regions = 0;
   int i,j;
-  //int base_row = 7;
-  //int base_col = 5;
   for (i = 0; i < (H / REGION_RES); i++) {
-    
-    //mvaddstr(base_row + 3 * i, base_col, "|");
     
     for (j = 0; j < (W / REGION_RES); j++) {
       
       double region_avg = 
 	regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
       
-      //char buf[16];
-      
       if (region_avg > R_THRESH) 
 	{
-	  //obstacle = 1;
 	  red_regions ++;
-	  //sprintf(buf, "(%.2f)    ", region_avg);
 	}
-      else
-	{
-	  //sprintf(buf, "%.2f    ", region_avg);
-	}
-      
-      /*
-	mvaddstr( base_row + 3 * i,
-	base_col + 6 * (j+1),
-	buf );
-      */
-      
       
     }
     
-    /*
-      mvaddstr( base_row + 3 * i, 
-      base_col + 6 * ((W/REGION_RES)+1), 
-      "|");
-    */
   }
   
-  /*
-    char buf[8];
-    
-    sprintf(buf, "%d    ", red_regions);
-    mvaddstr(5,3,buf);
-    
-    if(obstacle) {
-    mvaddstr(5,3,"WARNING!\n");
-    } else {
-    mvaddstr(5,3,"Safe....\n");
-    }
-  */
-  
-  //refresh();
-      
   free(regions);
   
   return red_regions;
@@ -317,47 +276,32 @@ int main(int argc, char* argv[])
   init();
   
   Roomba* roomba = roomba_init( argv[1] );
+  uint8_t mode = MODE_SEEK;
   
-  /*
-    pthread_mutex_init(&_lock, NULL);
-    pthread_t texc_cmd;
-    pthread_create(&texc_cmd, NULL, exc_cmd, (void*)roomba);
-  */
-  
-  //printf("Threads going\n");
+  double uturn_start_angle;
   
   printf("Start loop");
   
   while(1)
     {
       
-      //     printf("Getting obstacles\n");
+      /*
+       * Get obstacles and print the status of each column
+       */
       
       uint8_t* obs = findObstacles();
-      
       uint8_t* cols = calloc ( (W / REGION_RES),
 			       sizeof(uint8_t));
-      
-      //printf("Walking obstacles\n");
       
       int i,j;
       for (i = 0; i < (H / REGION_RES); i++){
 	for (j = 0; j < (W / REGION_RES); j++){
-	  
-	  //printf("checking obstacle %d %d\n", i, j);
-	  
 	  uint8_t region_avg = obs[i * (W / REGION_RES) + j];
-	  
 	  if (region_avg > THRESH) {
 	    cols[j] = 1;
 	  }
-	  
-	  //	  printf("%d ", region_avg);
 	}
-	//	printf("\n");
       }
-      
-      //printf("Finished with raw obstacles");
       
       free(obs);
       
@@ -379,8 +323,6 @@ int main(int argc, char* argv[])
       
       double centerofmass = (double)weight/(double)area;
       
-      int red_count = getRedCount();
-      
       char tempcmd = 'q';
       
       if (anyobs) {
@@ -396,20 +338,45 @@ int main(int argc, char* argv[])
 	tempcmd = 'w';
       }
       
+      /*
+       * Get the red count to decide if we can leave the SEEK mode
+       */
+      
+      int red_count = getRedCount();
+
       if (red_count > R_COUNT_THRESH)
 	{
-	  printf("RED THING!!!!!111\n");
+	  printf("RED OBJECT DETECTED\n");
 	  tempcmd = 'p';
+	  uturn_start_angle = posT;
+	  mode = MODE_UTURN;
 	}
-
-#ifndef FAKE
-      exc_one(roomba, tempcmd);
+      
+      /*
+       * Query the distanced traveled, which updates our position
+       */
+            
       exc_one(roomba, 'q');
-#endif
+      printf("x:%f, y:%f, t:%f", posX, posY, posT);
+      
+      switch(mode)
+	{
+
+	case MODE_SEEK:
+	  exc_one(roomba, tempcmd);      
+	  break;
+	  
+	case MODE_UTURN:
+	  printf("ToDo: turning around\n");
+	  exit(1);
+	  
+	default:
+	  exit(1);
+	  break;
+	  
+	}
       
     }
-  
-  //pthread_join(texc_cmd, NULL);
   
   return 0;
   

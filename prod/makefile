@@ -20,5 +20,3 @@ clean:
 main: main.c roombalib.c
 	$(CC) $(CFLAGS) $^ -o $@ $(L)
 
-fake: main.c roombalib.c
-	$(CC) -DFAKE $(CFLAGS) $^ -o fake $(L)
