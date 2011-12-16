@@ -18,9 +18,9 @@
 
 #define REGION_RES 40
 
-#define THRESH 175
-#define R_THRESH .23
-#define R_COUNT_THRESH 32
+#define D_THRESH 125
+#define R_THRESH .26
+#define R_COUNT_THRESH 100
 
 #define MODE_SEEK 0
 #define MODE_UTURN 1
@@ -29,9 +29,9 @@
 
 // Globals
 
-double posX;
-double posY;
-double posT;
+double posX = 0.0;
+double posY = 0.0;
+double posT = 0.0;
 
 uint32_t get_region(uint32_t offset)
 {
@@ -203,15 +203,6 @@ uint8_t* findObstacles() {
 void exc_one(Roomba* _roomba, char command)
 {
   
-  int err = 0;
-  
-  if (err != 0) 
-    {
-      printf("err: %d\n",err);
-      perror("exc sem wait");
-      exit(1);
-    }
-  
   printf("exc command: %c\n", command);
   
   switch(command)
@@ -264,9 +255,6 @@ void exc_one(Roomba* _roomba, char command)
       break;
     }
   
-  printf("exc unlock\n");
-
-  
 }
 
 int main(int argc, char* argv[])
@@ -297,7 +285,7 @@ int main(int argc, char* argv[])
       for (i = 0; i < (H / REGION_RES); i++){
 	for (j = 0; j < (W / REGION_RES); j++){
 	  uint8_t region_avg = obs[i * (W / REGION_RES) + j];
-	  if (region_avg > THRESH) {
+	  if (region_avg > D_THRESH) {
 	    cols[j] = 1;
 	  }
 	}
@@ -343,7 +331,9 @@ int main(int argc, char* argv[])
        */
       
       int red_count = getRedCount();
-
+      
+      printf("red count: %d\n", red_count);
+      
       if (red_count > R_COUNT_THRESH)
 	{
 	  printf("RED OBJECT DETECTED\n");
@@ -363,7 +353,8 @@ int main(int argc, char* argv[])
 	{
 
 	case MODE_SEEK:
-	  exc_one(roomba, tempcmd);      
+	  printf("fake send %c\n", tempcmd);
+	  //exc_one(roomba, tempcmd);      
 	  break;
 	  
 	case MODE_UTURN:
