@@ -243,11 +243,11 @@ void exc_one(Roomba* _roomba, char command)
       break;
       
     case'a':
-      roomba_spinleft_at(_roomba,100);
+      roomba_spinleft_at(_roomba,200);
       break;
       
     case'd':
-      roomba_spinright_at(_roomba,100);
+      roomba_spinright_at(_roomba,200);
       break;
       
     case'p':
@@ -437,11 +437,13 @@ int main(int argc, char* argv[])
 	      
 	      if (diff > 0) 
 		{
-		  exc_one(roomba, 'd');
+		  //exc_one(roomba, 'd');
+		  roomba_spinright_at(roomba, 50);
 		}
 	      else
 		{
-		  exc_one(roomba, 'a');
+		  //exc_one(roomba, 'a');
+		  roomba_spinleft_at(roomba, 50);
 		}
 	      
 	      exc_one(roomba, 'q');
