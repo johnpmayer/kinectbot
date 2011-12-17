@@ -18,7 +18,7 @@
 
 #define REGION_RES 40
 
-#define D_THRESH 125
+#define D_THRESH 200
 #define R_THRESH .26
 #define R_COUNT_THRESH 100
 
@@ -27,11 +27,37 @@
 #define MODE_RETURN 2
 #define MODE_FINISH 3
 
+#define UTURN_THRESH 0.1
+
 // Globals
 
 double posX = 0.0;
 double posY = 0.0;
 double posT = 0.0;
+
+double normalize_angle(double in)
+{
+  double out = in;
+  
+  while(out > PI) {
+    out -= 2*PI;
+    printf("normalized posT down\n");
+  }
+  
+  while(out < -PI) {
+    out += 2*PI;
+    printf("normalized posT up\n");
+  }
+  
+  return out;
+}
+
+double angle_diff(double target, double test) 
+{
+  
+  return normalize_angle(test - target);
+  
+}
 
 uint32_t get_region(uint32_t offset)
 {
@@ -244,10 +270,14 @@ void exc_one(Roomba* _roomba, char command)
       int16_t dist_i  = (sb[12]<<8) | sb[13];
       int16_t angle_i = (sb[14]<<8) | sb[15]; // in degrees
       
+      printf("delta dist:%d angle:%d\n", dist_i, angle_i);
+      
       double dist = dist_i;
       double angle = angle_i / 360.0 * 2.0 * PI;
       
       posT += angle;
+      
+      posT = normalize_angle(posT);
       
       posX += dist * cos(posT);
       posY += dist * sin(posT);
@@ -264,9 +294,14 @@ int main(int argc, char* argv[])
   init();
   
   Roomba* roomba = roomba_init( argv[1] );
-  uint8_t mode = MODE_SEEK;
+
+  exc_one(roomba, 'q');
   
-  double uturn_start_angle;
+  posX = 0.0;
+  posY = 0.0;
+  posT = 0.0;
+
+  uint8_t mode = MODE_SEEK;
   
   printf("Start loop");
   
@@ -338,8 +373,18 @@ int main(int argc, char* argv[])
 	{
 	  printf("RED OBJECT DETECTED\n");
 	  tempcmd = 'p';
-	  uturn_start_angle = posT;
-	  mode = MODE_UTURN;
+	  if (mode == MODE_SEEK)
+	    {
+	      mode = MODE_UTURN;
+	    }
+	  else if (mode == MODE_RETURN)
+	    {
+	      mode = MODE_FINISH;
+	    }
+	  else
+	    { 
+	      printf("mode error");
+	    }
 	}
       
       /*
@@ -347,21 +392,75 @@ int main(int argc, char* argv[])
        */
             
       exc_one(roomba, 'q');
-      printf("x:%f, y:%f, t:%f", posX, posY, posT);
+      printf("x:%f, y:%f, t:%f\n", posX, posY, posT);
       
       switch(mode)
 	{
 
 	case MODE_SEEK:
-	  printf("fake send %c\n", tempcmd);
-	  //exc_one(roomba, tempcmd);      
+	  //printf("fake send %c\n", tempcmd);
+	  exc_one(roomba, tempcmd);      
+	  break;
+	  
+	case MODE_RETURN:
+	  exc_one(roomba, tempcmd);
+	  break;
+	  
+	case MODE_FINISH:
+	  exc_one(roomba, 'p');
+
+	  int i;
+	  for (i = 0; i < 5; i++)
+	    {
+	      roomba_play_note(roomba, 10, 10);
+	      roomba_delay(10);
+	    }
+	  
+	  printf("returned!\n");
+	  
+	  exit(0);
 	  break;
 	  
 	case MODE_UTURN:
 	  printf("ToDo: turning around\n");
-	  exit(1);
+	  
+	  double return_bearing = atan2(-posY, -posX);
+	  
+	  double diff = angle_diff(return_bearing, posT);
+	  double abs_diff = (diff < 0) ? -diff : diff;
+	  
+	  printf("return_bearing:%f posT:%f diff:%f (%f)\n", 
+		 return_bearing, posT, diff, abs_diff);
+	  
+	  while (abs_diff > UTURN_THRESH)
+	    {
+	      
+	      if (diff > 0) 
+		{
+		  exc_one(roomba, 'd');
+		}
+	      else
+		{
+		  exc_one(roomba, 'a');
+		}
+	      
+	      exc_one(roomba, 'q');
+	      
+	      diff = angle_diff(return_bearing, posT);
+	      abs_diff = (diff < 0) ? -diff : diff;
+	      
+	      printf("return_bearing:%f posT:%f diff:%f (%f)\n", 
+		     return_bearing, posT, diff, abs_diff);
+	      
+	    }
+	  
+	  printf("turned around!\n");
+	  
+	  mode = MODE_RETURN;
+	  break;
 	  
 	default:
+	  printf("todo: mode %d", mode);
 	  exit(1);
 	  break;
 	  
