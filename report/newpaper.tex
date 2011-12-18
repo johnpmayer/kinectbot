@@ -77,69 +77,37 @@ University of Pennsylvania \\
 This paper describes our team's approach to design an autonomous pathfinding robot. An iRobot Roomba with an on-board computer uses an xBox Kinect video and depth camera to avoid a series of obstacles to a target object and return to the starting position.
 \end{abstract}
 
-\vspace{-10pt}
-
 \mySection{Introduction}
-
 \label{sec:intro_sec}
-
-\vspace{-5pt}
-
 Intro goes here...
-
-\mySubSection{My SubSection}
-My Sub Section goes here...
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure}[!b]
-		\centering
-		\vspace{-15pt}
-		\includegraphics[width=0.49\textwidth]{figs/taskmigrate.pdf}
-		\vspace{-20pt}
-		\caption{\small Task migration for real-time operation  (instructions, stack, data \& timing/fault tolerance meta-data) on one physical node to another. }
-		  \vspace{-10pt}
-		\label{fig:taskmigrate}
-\end{figure} 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\begin{figure*}[!t]
-%	\begin{center}
-%	\subfigure [EVM Design flow] {
-%				\includegraphics[width=0.25\textwidth]{figs/design_flow.pdf} 
-%				\label{fig:des_flow}
-%		}
-%		\subfigure [A control algorithm (VT) modeled in Simulink] {
-%				\includegraphics[width=0.35\textwidth]{figs/SimulinkVT.pdf} 
-%				\label{fig:SimVT}
-%		}
-%		\subfigure [Generated code] {	
-%			\includegraphics[width=0.3\textwidth]{figs/SimulinkVTcode.pdf} 
-%			\label{fig:SimVTcode}
-%		}
-%	\end{center}
-%	\label{fig:SimulinkVT}
-%	\vspace{-10pt}
-%	\caption{\small Generation of EVM functional description from Simulink model}
-%	\vspace{-15pt}
-%\end{figure*} 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\mySubSection{Another Sub Section}
-\vspace{-5pt}
-Another sub section goes here
 
 \mySection{Related work}
 \label{sec:related_sec}
 Related work goes here
 
+\mySection{Implementation}
+\label{sec:implementation_sec}
+Implementation details go here
+
+\mySubSection{Custom Hardware}
+Power unit
+
+\mySubSection{BeagleBoard xM}
+Ubuntu details, etc
+
+\mySubSection{Kinect}
+Kinect algorithms
+
+\mySubSection{Roomba}
+How we used the C wrapper?
+
+\mySubSection{AI Details}
+Pathfinding, red detection
+
 \mySection{Conclusion}
 \label{sec:conc_sec}
-\vspace{-5pt}
 Conclusion goes here
 
-\vspace{-5pt}
 \bibliographystyle{unsrt}
 { \small 
 \bibliography{bibliography}
@@ -152,5 +120,19 @@ Conclusion goes here
 
 %%%%%
 %%%%%notes:
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{figure}[!b]
+%		\centering
+%		\vspace{-15pt}
+%		\includegraphics[width=0.49\textwidth]{figs/taskmigrate.pdf}
+%		\vspace{-20pt}
+%		\caption{\small Task migration for real-time operation  (instructions, stack, data \& timing/fault tolerance meta-data) on one physical node to another. }
+%		  \vspace{-10pt}
+%		\label{fig:taskmigrate}
+%\end{figure} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 

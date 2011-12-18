@@ -59,6 +59,7 @@ double angle_diff(double target, double test)
   
 }
 
+
 /* Translate a character command code and send to roomba */
 void exc_one(Roomba* _roomba, char command)
 {
@@ -121,6 +122,46 @@ void exc_one(Roomba* _roomba, char command)
   
 }
 
+void orientToAngle(Roomba* roomba, double targetAngle)
+{
+  
+  printf("turning to desired angle %f\n", targetAngle);
+  
+  double diff = angle_diff(targetAngle, posT);
+  double abs_diff = (diff < 0) ? -diff : diff;
+  
+  printf("target angle:%f posT:%f diff:%f (%f)\n", 
+	 targetAngle, posT, diff, abs_diff);
+  
+  while (abs_diff > UTURN_THRESH)
+    {
+      
+      if (diff > 0) 
+	{
+	  //exc_one(roomba, 'd');
+	  roomba_spinright_at(roomba, 50);
+	}
+      else
+	{
+	  //exc_one(roomba, 'a');
+	  roomba_spinleft_at(roomba, 50);
+	}
+      
+      exc_one(roomba, 'q');
+      
+      diff = angle_diff(targetAngle, posT);
+      abs_diff = (diff < 0) ? -diff : diff;
+      
+      printf("targetAngle:%f posT:%f diff:%f (%f)\n", 
+	     targetAngle, posT, diff, abs_diff);
+      
+    }
+  
+  printf("finished turning\n");
+  
+}
+
+
 /* Main */
 int main(int argc, char* argv[])
 {
@@ -146,6 +187,9 @@ int main(int argc, char* argv[])
       /*
        * Get obstacles and print the status of each column
        */
+      
+      double closest = getClosestPoint();
+      printf("closest point %f\n", closest);
       
       uint8_t* obs = findObstacles();
       uint8_t* cols = calloc ( (W / REGION_RES),
@@ -261,35 +305,7 @@ int main(int argc, char* argv[])
 	  
 	  double return_bearing = atan2(-posY, -posX);
 	  
-	  double diff = angle_diff(return_bearing, posT);
-	  double abs_diff = (diff < 0) ? -diff : diff;
-	  
-	  printf("return_bearing:%f posT:%f diff:%f (%f)\n", 
-		 return_bearing, posT, diff, abs_diff);
-	  
-	  while (abs_diff > UTURN_THRESH)
-	    {
-	      
-	      if (diff > 0) 
-		{
-		  //exc_one(roomba, 'd');
-		  roomba_spinright_at(roomba, 50);
-		}
-	      else
-		{
-		  //exc_one(roomba, 'a');
-		  roomba_spinleft_at(roomba, 50);
-		}
-	      
-	      exc_one(roomba, 'q');
-	      
-	      diff = angle_diff(return_bearing, posT);
-	      abs_diff = (diff < 0) ? -diff : diff;
-	      
-	      printf("return_bearing:%f posT:%f diff:%f (%f)\n", 
-		     return_bearing, posT, diff, abs_diff);
-	      
-	    }
+	  orientToAngle(roomba, return_bearing);
 	  
 	  printf("turned around!\n");
 	  

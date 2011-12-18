@@ -1,3 +1,12 @@
+
+double depthToMillimeters(uint16_t raw_depth) {
+  if (GET11(raw_depth) < 2047)
+    {
+      return 1000.0 / (GET11(raw_depth) * -0.0030711016 + 3.3309495161);
+    }
+  return 0;
+}
+
 uint32_t get_region(uint32_t offset)
 {
   
@@ -89,6 +98,42 @@ int getRedCount() {
   return red_regions;
   
 }
+
+double getClosestPoint() {
+  
+  uint16_t* data;
+  uint32_t timestamp;
+  int err = freenect_sync_get_depth( (void**)(&data),
+				     &timestamp,
+				     0,
+				     FREENECT_DEPTH_11BIT );
+  
+  if (err)
+    {
+      printf("bad kinect access\n");
+      exit(1);
+    }
+  
+  double minDistance = 0.0;
+  
+  int i,j;
+  for (i = 0; i < H; i++)
+    {
+      for (j = 0; j < W; j++)
+	{
+	  int offset = i*W + j;
+	  double distance_mm = depthToMillimeters(data[offset]);
+	  if (distance_mm != 0 && (minDistance == 0 || distance_mm < minDistance))
+	    {
+	      minDistance = distance_mm;
+	    }
+	}
+    }
+  
+  return minDistance;
+  
+}
+  
 
 uint8_t* findObstacles() {
   

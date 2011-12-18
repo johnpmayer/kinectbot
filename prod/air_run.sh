@@ -1,1 +1,1 @@
-./main /dev/tty.usbserial-A40081GD
+./main /dev/tty.usbserial

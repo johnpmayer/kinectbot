@@ -9,7 +9,7 @@ CC = gcc -DSIMPLE_MAIN
 
 BINARIES = main
 
-all: $(BINARIES)
+all: clean $(BINARIES)
 
 clean:
 	rm -f $(BINARIES)
