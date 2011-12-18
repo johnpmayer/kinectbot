@@ -1,4 +1,6 @@
 
+#include "rgb_to_hsv_int.c"
+
 double depthToMillimeters(uint16_t raw_depth) {
   if (GET11(raw_depth) < 2047)
     {
@@ -34,6 +36,72 @@ void init(void) {
   }
 }
 
+double redObstacleRatio(uint8_t* obstacles)
+{
+  
+  uint8_t* data;
+  
+  uint32_t* regions = calloc( (W / REGION_RES) * (H / REGION_RES), 
+			      sizeof(double) );
+  
+  uint32_t timestamp;
+  
+  int32_t err = freenect_sync_get_video( (void**)(&data), 
+					 &timestamp, 
+					 0, 
+					 FREENECT_VIDEO_RGB );
+  
+  if (err) {
+    printf("can't access kinect\n");
+    exit(1);
+  }
+  
+  uint32_t offset;
+  uint32_t max = W*H;
+  
+  for(offset = 0; offset < max; offset += 3 )
+    {
+      
+      uint8_t r = data[offset];
+      uint8_t g = data[offset+1];
+      uint8_t b = data[offset+2];
+      
+      struct rgb_color rgb = {r,g,b};
+      struct hsv_color hsv = rgb_to_hsv(rgb);
+      
+      if ( (hsv.val > 32) &&
+	   (hsv.hue < 24 || hsv.hue > 232) &&
+	   (hsv.sat > 128)
+	   )
+	{
+	  regions[get_region(offset)] ++;
+	}
+      
+    }
+  
+  uint32_t obs_count = 0, red_count = 0;
+  int i,j;
+  for (i = 0; i < (H/REGION_RES); i++) 
+    {
+      for (j = 0; j < (W/REGION_RES); j++) 
+	{
+	  int region_index = i * (W/REGION_RES) + j;
+	  
+	  if (obstacles[region_index])
+	    {
+	      obs_count++;
+	      if (regions[region_index] > HSV_THRESH)
+		{
+		  red_count++;
+		}
+	    }
+	}
+    }
+  
+  return (double)red_count / (double)obs_count;
+  
+}
+
 int getRedCount() {
   uint8_t* data;
       
@@ -52,7 +120,7 @@ int getRedCount() {
     printf("can't access kinect\n");
     exit(1);
   }
-
+  
   // pull distance, calc dot product, etc
   uint32_t offset;
   uint32_t max = W*H;

@@ -6,6 +6,7 @@
 #include <ncurses.h>
 
 #include "bmp.c"
+#include "rgb_to_hsv_int.c"
 
 #define GET5(x) (x >> 11)// & ((1 << 5) - 1))
 #define GET11(x) (x & ((1<<11)-1))
@@ -15,8 +16,8 @@
 
 #define REGION_RES 40
 
-// some value between 0 and 1, comparing with some value cos(t)
-#define R_THRESH 0.26
+// some value between 0 and 1600
+#define R_THRESH 100
 
 #define LOOP 1
 
@@ -70,7 +71,7 @@ int main()
       
       uint8_t* data;
       
-      double* regions = calloc( (W / REGION_RES) * (H / REGION_RES), 
+      uint64_t* regions = calloc( (W / REGION_RES) * (H / REGION_RES), 
 				  sizeof(double) );
       
       uint32_t timestamp;
@@ -95,9 +96,12 @@ int main()
       for(offset = 0; offset < max; offset += 3 )
 	{
 	  
-	  double r = data[offset];
-	  double g = data[offset+1];
-	  double b = data[offset+2];
+	  uint8_t r = data[offset];
+	  uint8_t g = data[offset+1];
+	  uint8_t b = data[offset+2];
+	  
+	  struct rgb_color rgb = {r,g,b};
+	  struct hsv_color hsv = rgb_to_hsv(rgb);
 	  
 	  /*
 	   * euclidean distance from 'perfect red'
@@ -107,12 +111,22 @@ int main()
 	    pow(g,2) +
 	    pow(b,2) );
 	  */
+	  
+	  if ( (hsv.val > 32) &&
+	       (hsv.hue < 24 || hsv.hue > 232) &&
+	       (hsv.sat > 128)
+	       )
+	    {
+	      regions[get_region(offset)] ++;
+	    }
+	  
+	  /*
 	  double cosT = 
 	    r /
 	    sqrt( pow(r,2) + pow(g,2) + pow(b,2) );
 	  
 	  regions[get_region(offset)] += cosT;
-	  
+	  */
 	}
       
       
@@ -127,20 +141,20 @@ int main()
 	
 	for (j = 0; j < (W / REGION_RES); j++) {
 	  
-	  double region_avg = 
-	    regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
+	  uint64_t region_count =
+	    regions[(i * (W / REGION_RES)) + j];
 	  
 	  char buf[16];
 	  
-	  if (region_avg > R_THRESH) 
+	  if (region_count > R_THRESH) 
 	    {
 	      //obstacle = 1;
 	      red_regions ++;
-	      sprintf(buf, "(%.2f)    ", region_avg);
+	      sprintf(buf, "(%"PRIu64")    ", region_count);
 	    }
 	  else
 	    {
-	      sprintf(buf, "%.2f    ", region_avg);
+	      sprintf(buf, "%"PRIu64"    ", region_count);
 	    }
 	  
 	  

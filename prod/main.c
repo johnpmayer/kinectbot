@@ -45,7 +45,6 @@ double angle_diff(double target, double test)
   
 }
 
-
 /* Translate a character command code and send to roomba */
 void exc_one(Roomba* _roomba, char command)
 {
@@ -56,7 +55,7 @@ void exc_one(Roomba* _roomba, char command)
     {
       
     case'w':
-      roomba_forward_at(_roomba,100);
+      roomba_forward_at(_roomba,150);
       break;
       
     case's':
@@ -165,7 +164,7 @@ void moveMillimetersY(Roomba* roomba, double yDist) {
   while ( ( yDist > 0 && posY < targetYPos ) ||
 	  ( yDist < 0 && posY > targetYPos ) )
     {
-      roomba_forward_at(roomba, 100);
+      roomba_forward_at(roomba, 150);
       exc_one(roomba, 'q');
       printf("targetY: %f posY: %f\n", targetYPos, posY);
     }
@@ -192,7 +191,7 @@ void moveMillimetersX(Roomba* roomba, double xDist) {
   while ( ( xDist > 0 && posX < targetXPos ) ||
 	  ( xDist < 0 && posX > targetXPos ) )
     {
-      roomba_forward_at(roomba, 100);
+      roomba_forward_at(roomba, 150);
       roomba_delay(10);
       exc_one(roomba, 'q');
       printf("targetX: %f posX: %f\n", targetXPos, posX);
@@ -245,7 +244,7 @@ int main(int argc, char* argv[])
 	}
       }
       
-      free(obs);
+      
       
       printf("Cols: ");
       
@@ -273,30 +272,39 @@ int main(int argc, char* argv[])
        * Get the red count to decide if we can leave the SEEK mode
        */
       
-      int red_count = getRedCount();
-      
-      printf("red count: %d\n", red_count);
-      
-      if (red_count > R_COUNT_THRESH)
+      if (anyobs)
 	{
-	  printf("RED OBJECT DETECTED\n");
-	  //tempcmd = 'p';
-	  if (mode == MODE_SEEK)
+	  double red_ratio = redObstacleRatio(obs);
+	  if (red_ratio > RED_RATIO_THRESH)
 	    {
-	      mode = MODE_UTURN;
-	    }
-	  else if (mode == MODE_RETURN)
-	    {
-	      mode = MODE_FINISH;
-	    }
-	  else
-	    { 
-	      printf("mode error");
+	      if (mode == MODE_SEEK)
+		{
+		  mode = MODE_UTURN;
+		}
+	      else if (mode == MODE_RETURN)
+		{
+		  mode = MODE_FINISH;
+		}
+	      else
+		{ 
+		  printf("mode error");
+		  exit(1);
+		}
 	    }
 	}
       
-
-      
+      /*
+	int red_count = getRedCount();
+	
+	printf("red count: %d\n", red_count);
+	
+	if (red_count > R_COUNT_THRESH)
+	{
+	printf("RED OBJECT DETECTED\n");
+	//tempcmd = 'p';
+	
+	}
+      */
       
       /*
        * Query the distanced traveled, which updates our position
@@ -305,18 +313,28 @@ int main(int argc, char* argv[])
       exc_one(roomba, 'q');
       printf("x:%f, y:%f, t:%f\n", posX, posY, posT);
       
-      
-      
       switch(mode)
 	{
 
 	case MODE_SEEK:
 	  if (anyobs) {
 	    
-	    moveMillimetersY(roomba, Y_AVOID);
-	    orientToAngle(roomba, 0);
+	    if (centerofmass < ((W / REGION_RES) - 1) * .25) {
+	      moveMillimetersY(roomba, -Y_AVOID_S);
+	      orientToAngle(roomba, 0);
+	    } else if (centerofmass > ((W / REGION_RES) - 1) * .75) {
+	      moveMillimetersY(roomba, Y_AVOID_S);
+	      orientToAngle(roomba, 0);
+	    } else {
+	      if (posY >= 0) {
+		moveMillimetersY(roomba, -Y_AVOID_L);
+		orientToAngle(roomba, 0);
+	      } else {
+		moveMillimetersY(roomba, Y_AVOID_L);
+		orientToAngle(roomba, 0);
+	      }
+	    }
 	    /*
-	      
 	      if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
 	      printf("obs right, go LEFT\n");
 	      tempcmd = 'a';
@@ -328,15 +346,55 @@ int main(int argc, char* argv[])
 	    
 	  } else {
 	    printf("clear\n");
+	    orientToAngle(roomba, 0);
 	    exc_one(roomba, 'w');
 	  }
 
 	  break;
 	  
 	case MODE_RETURN:
-	  printf("todo");
-	  exc_one(roomba, 'p');
-	  exit(0);
+	  if (anyobs) {
+	    
+	    if (centerofmass < ((W / REGION_RES) - 1) * .3) {
+	      moveMillimetersY(roomba, Y_AVOID_S);
+	      orientToAngle(roomba, PI);
+	    } else if (centerofmass > ((W / REGION_RES) - 1) * .7) {
+	      moveMillimetersY(roomba, -Y_AVOID_S);
+	      orientToAngle(roomba, PI);
+	    } else {
+	      if (posY >= 0) {
+		moveMillimetersY(roomba, -Y_AVOID_L);
+		orientToAngle(roomba, PI);
+	      } else {
+		moveMillimetersY(roomba, Y_AVOID_L);
+		orientToAngle(roomba, PI);
+	      }
+	    }
+	    /*
+	      if (posY >= 0) {
+	      moveMillimetersY(roomba, -Y_AVOID);
+	      orientToAngle(roomba, PI);
+	      } else {
+	      moveMillimetersY(roomba, Y_AVOID);
+	      orientToAngle(roomba, PI);
+	      }
+	    */
+	    /*
+	      if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
+	      printf("obs right, go LEFT\n");
+	      tempcmd = 'a';
+	      } else {
+	      printf("obs left, go RIGHT\n");
+	      tempcmd = 'd';
+	      }
+	    */
+	    
+	  } else {
+	    printf("clear\n");
+	    orientToAngle(roomba, PI);
+	    exc_one(roomba, 'w');
+	  }
+ 
 	  break;
 	  
 	case MODE_FINISH:
@@ -347,8 +405,8 @@ int main(int argc, char* argv[])
 	  
 	case MODE_UTURN:
 	  printf("ToDo: turning around\n");
-	  double return_bearing = atan2(-posY, -posX);
-	  orientToAngle(roomba, return_bearing);
+	  //double return_bearing = atan2(-posY, -posX);
+	  orientToAngle(roomba, PI);//return_bearing);
 	  printf("turned around!\n");
 	  mode = MODE_RETURN;
 	  break;
@@ -359,6 +417,8 @@ int main(int argc, char* argv[])
 	  break;
 	  
 	}
+      
+      free(obs);
       
     }
   
