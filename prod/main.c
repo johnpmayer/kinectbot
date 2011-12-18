@@ -1,42 +1,39 @@
 
+/* Standard Libraries */
 #include <math.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Device Libraries */
 #include <libfreenect_sync.h>
-
 #include "roombalib.h"
 
+/* Constants and Macros */
 #define PI 3.1415926
-
 #define GET5(x) (x >> 11)// & ((1 << 5) - 1))
 #define GET11(x) (x & ((1<<11)-1))
-
 #define W 640
 #define H 480
-
 #define REGION_RES 40
-
 #define D_THRESH 175
 #define R_THRESH .22
 #define R_COUNT_THRESH 80
-
 #define MODE_SEEK 0
 #define MODE_UTURN 1
 #define MODE_RETURN 2
 #define MODE_FINISH 3
-
 #define UTURN_THRESH 0.1
 
+/* Module Code */
 #include "vision.c"
 
-// Globals
-
+/* Globals */
 double posX = 0.0;
 double posY = 0.0;
 double posT = 0.0;
 
+/* Enforces that a double is in the range (-PI, PI] */
 double normalize_angle(double in)
 {
   double out = in;
@@ -46,7 +43,7 @@ double normalize_angle(double in)
     printf("normalized posT down\n");
   }
   
-  while(out < -PI) {
+  while(out <= -PI) {
     out += 2*PI;
     printf("normalized posT up\n");
   }
@@ -54,6 +51,7 @@ double normalize_angle(double in)
   return out;
 }
 
+/* Difference of two angles */
 double angle_diff(double target, double test) 
 {
   
@@ -61,8 +59,7 @@ double angle_diff(double target, double test)
   
 }
 
-
-
+/* Translate a character command code and send to roomba */
 void exc_one(Roomba* _roomba, char command)
 {
   
@@ -124,6 +121,7 @@ void exc_one(Roomba* _roomba, char command)
   
 }
 
+/* Main */
 int main(int argc, char* argv[])
 {
   printf("yes\n");
