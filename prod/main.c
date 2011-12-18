@@ -18,9 +18,9 @@
 
 #define REGION_RES 40
 
-#define D_THRESH 200
-#define R_THRESH .26
-#define R_COUNT_THRESH 100
+#define D_THRESH 175
+#define R_THRESH .22
+#define R_COUNT_THRESH 80
 
 #define MODE_SEEK 0
 #define MODE_UTURN 1
@@ -235,7 +235,7 @@ void exc_one(Roomba* _roomba, char command)
     {
       
     case'w':
-      roomba_forward(_roomba);
+      roomba_forward_at(_roomba,100);
       break;
       
     case's':
@@ -243,11 +243,11 @@ void exc_one(Roomba* _roomba, char command)
       break;
       
     case'a':
-      roomba_spinleft_at(_roomba,200);
+      roomba_spinleft_at(_roomba,100);
       break;
       
     case'd':
-      roomba_spinright_at(_roomba,200);
+      roomba_spinright_at(_roomba,100);
       break;
       
     case'p':
