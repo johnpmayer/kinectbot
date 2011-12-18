@@ -18,51 +18,111 @@
 
 #define REGION_RES 40
 
-#define THRESH 175
-#define R_THRESH .25
-#define R_COUNT_THRESH 32
+#define D_THRESH 200
+#define R_THRESH .26
+#define R_COUNT_THRESH 100
+
+#define MODE_SEEK 0
+#define MODE_UTURN 1
+#define MODE_RETURN 2
+#define MODE_FINISH 3
+
+#define UTURN_THRESH 0.1
 
 // Globals
 
-//char command;
+double posX = 0.0;
+double posY = 0.0;
+double posT = 0.0;
 
-double posX;
-double posY;
-double posT;
-
-pthread_mutex_t _lock;
-//pthread_mutex_t* lock = &_lock;
-
-void waitRoombaPlayBtnPush(Roomba* _roomba)
+#define TOLERATE 5 //in degree
+void roomba_spinleft_angle(Roomba* _roomba, int16_t degree) //in degree
 {
-	printf("Wait for Play Button to be pushed!\n");
+	int16_t diff = 0;
+	uint8_t* sb;
+	int16_t tmp_angle;
 	while(1)
 	{
-		roomba_read_sensors(_roomba );
-		roomba_delay(COMMANDPAUSE_MILLIS);
-		if((_roomba->sensor_bytes[11]&0x01) == 1)
+		if(diff >= degree-TOLERATE && diff <= degree+TOLERATE)
 		{
-			printf("Play Button Pushed!\n");
-			return;
+			printf("break!\n");
+			roomba_stop(_roomba );
+			break;
 		}
+		else if(diff > degree+TOLERATE)
+		{
+			roomba_spinright_at(_roomba, 50);
+			roomba_delay(COMMANDPAUSE_MILLIS);
+		}
+		else
+		{
+			roomba_spinleft_at(_roomba, 100);
+			roomba_delay(COMMANDPAUSE_MILLIS);
+		}
+		roomba_read_sensors(_roomba);
+  	sb = ((Roomba*)_roomba)->sensor_bytes;
+		tmp_angle = (sb[14]<<8) | sb[15]; // in degrees
+		diff += tmp_angle;
+		roomba_delay(COMMANDPAUSE_MILLIS);
+		printf("turned angle: %d\n", diff);
 	}
 }
 
-void waitRoombaAdvanceBtnPush(Roomba* _roomba)
+void roomba_spinright_angle(Roomba* _roomba, int16_t degree) //in degree
 {
-	printf("Wait for Advance Button to be pushed!\n");
+	int16_t diff = 0;
+	uint8_t* sb;
+	int16_t tmp_angle;
 	while(1)
 	{
-		roomba_read_sensors(_roomba );
-		roomba_delay(COMMANDPAUSE_MILLIS);
-		if(_roomba->sensor_bytes[11] == 4)
+		if(diff >= degree-TOLERATE && diff <= degree+TOLERATE)
 		{
-			printf("Advance Button Pushed!\n");
-			return;
+			printf("break!\n");
+			roomba_stop(_roomba );
+			break;
 		}
+		else if(diff > degree+TOLERATE)
+		{
+			roomba_spinleft_at(_roomba, 50);
+			roomba_delay(COMMANDPAUSE_MILLIS);
+		}
+		else
+		{
+			roomba_spinright_at(_roomba, 100);
+			roomba_delay(COMMANDPAUSE_MILLIS);
+		}
+		roomba_read_sensors(_roomba);
+  	sb = ((Roomba*)_roomba)->sensor_bytes;
+		tmp_angle = (sb[14]<<8) | sb[15]; // in degrees
+		diff -= tmp_angle;
+		roomba_delay(COMMANDPAUSE_MILLIS);
+		printf("turned angle: %d\n", diff);
 	}
 }
-//Roomba* roomba;
+
+double normalize_angle(double in)
+{
+  double out = in;
+  
+  while(out > PI) {
+    out -= 2*PI;
+    printf("normalized posT down\n");
+  }
+  
+  while(out < -PI) {
+    out += 2*PI;
+    printf("normalized posT up\n");
+  }
+  
+  return out;
+}
+
+double angle_diff(double target, double test) 
+{
+  
+  return normalize_angle(test - target);
+  
+}
 
 uint32_t get_region(uint32_t offset)
 {
@@ -134,61 +194,22 @@ int getRedCount() {
   
   int red_regions = 0;
   int i,j;
-  //int base_row = 7;
-  //int base_col = 5;
   for (i = 0; i < (H / REGION_RES); i++) {
-    
-    //mvaddstr(base_row + 3 * i, base_col, "|");
     
     for (j = 0; j < (W / REGION_RES); j++) {
       
       double region_avg = 
 	regions[(i * (W / REGION_RES)) + j] / pow(REGION_RES, 2);
       
-      //char buf[16];
-      
       if (region_avg > R_THRESH) 
 	{
-	  //obstacle = 1;
 	  red_regions ++;
-	  //sprintf(buf, "(%.2f)    ", region_avg);
 	}
-      else
-	{
-	  //sprintf(buf, "%.2f    ", region_avg);
-	}
-      
-      /*
-	mvaddstr( base_row + 3 * i,
-	base_col + 6 * (j+1),
-	buf );
-      */
-      
       
     }
     
-    /*
-      mvaddstr( base_row + 3 * i, 
-      base_col + 6 * ((W/REGION_RES)+1), 
-      "|");
-    */
   }
   
-  /*
-    char buf[8];
-    
-    sprintf(buf, "%d    ", red_regions);
-    mvaddstr(5,3,buf);
-    
-    if(obstacle) {
-    mvaddstr(5,3,"WARNING!\n");
-    } else {
-    mvaddstr(5,3,"Safe....\n");
-    }
-  */
-  
-  //refresh();
-      
   free(regions);
   
   return red_regions;
@@ -273,15 +294,6 @@ uint8_t* findObstacles() {
 void exc_one(Roomba* _roomba, char command)
 {
   
-  int err = 0;
-  
-  if (err != 0) 
-    {
-      printf("err: %d\n",err);
-      perror("exc sem wait");
-      exit(1);
-    }
-  
   printf("exc command: %c\n", command);
   
   switch(command)
@@ -296,12 +308,14 @@ void exc_one(Roomba* _roomba, char command)
       break;
       
     case'a':
-      roomba_spinleft_at(_roomba,120);
+      //roomba_spinleft_at(_roomba,200);
+			roomba_spinleft_angle(_roomba, 90);
       break;
       
     case'd':
-      roomba_spinright_at(_roomba,120);
-      break;
+      //roomba_spinright_at(_roomba,200);
+			roomba_spinright_angle(_roomba,90);      
+			break;
       
     case'p':
       roomba_stop(_roomba);
@@ -309,7 +323,7 @@ void exc_one(Roomba* _roomba, char command)
       
     case'e':
       roomba_stop(_roomba);
-      //pthread_exit(NULL);
+      pthread_exit(NULL);
       break;
       
     default:
@@ -323,19 +337,20 @@ void exc_one(Roomba* _roomba, char command)
       int16_t dist_i  = (sb[12]<<8) | sb[13];
       int16_t angle_i = (sb[14]<<8) | sb[15]; // in degrees
       
+      printf("delta dist:%d angle:%d\n", dist_i, angle_i);
+      
       double dist = dist_i;
       double angle = angle_i / 360.0 * 2.0 * PI;
       
       posT += angle;
+      
+      posT = normalize_angle(posT);
       
       posX += dist * cos(posT);
       posY += dist * sin(posT);
       
       break;
     }
-  
-  printf("exc unlock\n");
-
   
 }
 
@@ -346,48 +361,37 @@ int main(int argc, char* argv[])
   init();
   
   Roomba* roomba = roomba_init( argv[1] );
-  roomba_set_velocity(roomba, 400);
-  /*
-    pthread_mutex_init(&_lock, NULL);
-    pthread_t texc_cmd;
-    pthread_create(&texc_cmd, NULL, exc_cmd, (void*)roomba);
-  */
-  
-  //printf("Threads going\n");
-	waitRoombaPlayBtnPush(roomba);
-  printf("Start loop\n");
 
-  //search for the object
+  exc_one(roomba, 'q');
+  
+  posX = 0.0;
+  posY = 0.0;
+  posT = 0.0;
+
+  uint8_t mode = MODE_SEEK;
+  
+  printf("Start loop");
+  
   while(1)
     {
       
-      //     printf("Getting obstacles\n");
+      /*
+       * Get obstacles and print the status of each column
+       */
       
       uint8_t* obs = findObstacles();
-      
       uint8_t* cols = calloc ( (W / REGION_RES),
 			       sizeof(uint8_t));
-      
-      //printf("Walking obstacles\n");
       
       int i,j;
       for (i = 0; i < (H / REGION_RES); i++){
 	for (j = 0; j < (W / REGION_RES); j++){
-	  
-	  //printf("checking obstacle %d %d\n", i, j);
-	  
 	  uint8_t region_avg = obs[i * (W / REGION_RES) + j];
-	  
-	  if (region_avg > THRESH) {
+	  if (region_avg > D_THRESH) {
 	    cols[j] = 1;
 	  }
-	  
-	  //	  printf("%d ", region_avg);
 	}
-	//	printf("\n");
       }
-      
-      //printf("Finished with raw obstacles");
       
       free(obs);
       
@@ -409,8 +413,6 @@ int main(int argc, char* argv[])
       
       double centerofmass = (double)weight/(double)area;
       
-      int red_count = getRedCount();
-      
       char tempcmd = 'q';
       
       if (anyobs) {
@@ -426,36 +428,114 @@ int main(int argc, char* argv[])
 	tempcmd = 'w';
       }
       
+      /*
+       * Get the red count to decide if we can leave the SEEK mode
+       */
+      
+      int red_count = getRedCount();
+      
+      printf("red count: %d\n", red_count);
+      
       if (red_count > R_COUNT_THRESH)
 	{
-	  printf("RED THING!!!!!111\n");
+	  printf("RED OBJECT DETECTED\n");
 	  tempcmd = 'p';
+	  if (mode == MODE_SEEK)
+	    {
+	      mode = MODE_UTURN;
+	    }
+	  else if (mode == MODE_RETURN)
+	    {
+	      mode = MODE_FINISH;
+	    }
+	  else
+	    { 
+	      printf("mode error");
+	    }
 	}
-
-#ifndef FAKE
-      exc_one(roomba, tempcmd);
+      
+      /*
+       * Query the distanced traveled, which updates our position
+       */
+            
       exc_one(roomba, 'q');
-#endif
-  }
-  roomba_play_note(roomba, 57, 32);
-	roomba_delay(100);
-	roomba_play_note(roomba, 59, 32);
-	roomba_delay(100);
-	roomba_play_note(roomba, 60, 32);
-	roomba_delay(100);
-	roomba_play_note(roomba, 64, 32);
-	roomba_delay(100);
-	waitRoombaAdvanceBtnPush(roomba);
-	//turn around to return
-	double return_angle = 180 - posT;
-	while(posT != return_angle)
+      printf("x:%f, y:%f, t:%f\n", posX, posY, posT);
+      
+      switch(mode)
 	{
-		exc_one(roomba, 'a');
-		exc_one(roomba, 'q');
-	}
-	//ToDo:return and search
 
-  //pthread_join(texc_cmd, NULL);
+	case MODE_SEEK:
+	  //printf("fake send %c\n", tempcmd);
+	  exc_one(roomba, tempcmd);      
+	  break;
+	  
+	case MODE_RETURN:
+	  exc_one(roomba, tempcmd);
+	  break;
+	  
+	case MODE_FINISH:
+	  exc_one(roomba, 'p');
+
+	  int i;
+	  for (i = 0; i < 5; i++)
+	    {
+	      roomba_play_note(roomba, 10, 10);
+	      roomba_delay(10);
+	    }
+	  
+	  printf("returned!\n");
+	  
+	  exit(0);
+	  break;
+	  
+	case MODE_UTURN:
+	  printf("ToDo: turning around\n");
+	  
+	  double return_bearing = atan2(-posY, -posX);
+	  
+	  double diff = angle_diff(return_bearing, posT);
+	  double abs_diff = (diff < 0) ? -diff : diff;
+	  
+	  printf("return_bearing:%f posT:%f diff:%f (%f)\n", 
+		 return_bearing, posT, diff, abs_diff);
+	  
+	  while (abs_diff > UTURN_THRESH)
+	    {
+	      
+	      if (diff > 0) 
+		{
+		  //exc_one(roomba, 'd');
+		  roomba_spinright_at(roomba, 50);
+		}
+	      else
+		{
+		  //exc_one(roomba, 'a');
+		  roomba_spinleft_at(roomba, 50);
+		}
+	      
+	      exc_one(roomba, 'q');
+	      
+	      diff = angle_diff(return_bearing, posT);
+	      abs_diff = (diff < 0) ? -diff : diff;
+	      
+	      printf("return_bearing:%f posT:%f diff:%f (%f)\n", 
+		     return_bearing, posT, diff, abs_diff);
+	      
+	    }
+	  
+	  printf("turned around!\n");
+	  
+	  mode = MODE_RETURN;
+	  break;
+	  
+	default:
+	  printf("todo: mode %d", mode);
+	  exit(1);
+	  break;
+	  
+	}
+      
+    }
   
   return 0;
   
