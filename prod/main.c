@@ -161,6 +161,60 @@ void orientToAngle(Roomba* roomba, double targetAngle)
   
 }
 
+void moveMillimetersY(Roomba* roomba, double yDist) {
+  
+  if (yDist == 0) return;
+
+  if (yDist > 0)
+    {
+      orientToAngle(roomba, PI/2);
+    }
+  else
+    {
+      orientToAngle(roomba, -PI/2);
+    }
+  
+  double targetYPos = posY + yDist;
+  
+  while ( ( yDist > 0 && posY < targetYPos ) ||
+	  ( yDist < 0 && posY > targetYPos ) )
+    {
+      roomba_forward_at(roomba, 100);
+      exc_one(roomba, 'q');
+      printf("targetY: %f posY: %f\n", targetYPos, posY);
+    }
+  
+  printf("moved in y direction\n");
+  
+}
+
+void moveMillimetersX(Roomba* roomba, double xDist) {
+  
+  if (xDist == 0) return;
+
+  if (xDist > 0)
+    {
+      orientToAngle(roomba, 0);
+    }
+  else
+    {
+      orientToAngle(roomba, -PI);
+    }
+  
+  double targetXPos = posX + xDist;
+  
+  while ( ( xDist > 0 && posX < targetXPos ) ||
+	  ( xDist < 0 && posX > targetXPos ) )
+    {
+      roomba_forward_at(roomba, 100);
+      roomba_delay(10);
+      exc_one(roomba, 'q');
+      printf("targetX: %f posX: %f\n", targetXPos, posX);
+    }
+  
+  printf("moved in x direction\n");
+  
+}
 
 /* Main */
 int main(int argc, char* argv[])
@@ -224,6 +278,10 @@ int main(int argc, char* argv[])
       printf("\n");
       
       double centerofmass = (double)weight/(double)area;
+      
+      /*
+       * At this point we know what's in front of us and what columns are clear (sans blind spot)
+       */
       
       char tempcmd = 'q';
       
