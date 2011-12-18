@@ -1,1 +1,1 @@
-./main /dev/tty.usbserial
+./main `ls /dev/tty.usb*`

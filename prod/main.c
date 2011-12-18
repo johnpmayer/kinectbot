@@ -9,21 +9,7 @@
 #include <libfreenect_sync.h>
 #include "roombalib.h"
 
-/* Constants and Macros */
-#define PI 3.1415926
-#define GET5(x) (x >> 11)// & ((1 << 5) - 1))
-#define GET11(x) (x & ((1<<11)-1))
-#define W 640
-#define H 480
-#define REGION_RES 40
-#define D_THRESH 175
-#define R_THRESH .22
-#define R_COUNT_THRESH 80
-#define MODE_SEEK 0
-#define MODE_UTURN 1
-#define MODE_RETURN 2
-#define MODE_FINISH 3
-#define UTURN_THRESH 0.1
+#include "config.h"
 
 /* Module Code */
 #include "vision.c"
@@ -283,21 +269,6 @@ int main(int argc, char* argv[])
        * At this point we know what's in front of us and what columns are clear (sans blind spot)
        */
       
-      char tempcmd = 'q';
-      
-      if (anyobs) {
-	if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
-	  printf("obs right, go LEFT\n");
-	  tempcmd = 'a';
-	} else {
-	  printf("obs left, go RIGHT\n");
-	  tempcmd = 'd';
-	}
-      } else {
-	printf("clear\n");
-	tempcmd = 'w';
-      }
-      
       /*
        * Get the red count to decide if we can leave the SEEK mode
        */
@@ -309,7 +280,7 @@ int main(int argc, char* argv[])
       if (red_count > R_COUNT_THRESH)
 	{
 	  printf("RED OBJECT DETECTED\n");
-	  tempcmd = 'p';
+	  //tempcmd = 'p';
 	  if (mode == MODE_SEEK)
 	    {
 	      mode = MODE_UTURN;
@@ -324,49 +295,61 @@ int main(int argc, char* argv[])
 	    }
 	}
       
+
+      
+      
       /*
        * Query the distanced traveled, which updates our position
        */
-            
+      
       exc_one(roomba, 'q');
       printf("x:%f, y:%f, t:%f\n", posX, posY, posT);
+      
+      
       
       switch(mode)
 	{
 
 	case MODE_SEEK:
-	  //printf("fake send %c\n", tempcmd);
-	  exc_one(roomba, tempcmd);      
+	  if (anyobs) {
+	    
+	    moveMillimetersY(roomba, Y_AVOID);
+	    orientToAngle(roomba, 0);
+	    /*
+	      
+	      if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
+	      printf("obs right, go LEFT\n");
+	      tempcmd = 'a';
+	      } else {
+	      printf("obs left, go RIGHT\n");
+	      tempcmd = 'd';
+	      }
+	    */
+	    
+	  } else {
+	    printf("clear\n");
+	    exc_one(roomba, 'w');
+	  }
+
 	  break;
 	  
 	case MODE_RETURN:
-	  exc_one(roomba, tempcmd);
+	  printf("todo");
+	  exc_one(roomba, 'p');
+	  exit(0);
 	  break;
 	  
 	case MODE_FINISH:
 	  exc_one(roomba, 'p');
-
-	  int i;
-	  for (i = 0; i < 5; i++)
-	    {
-	      roomba_play_note(roomba, 10, 10);
-	      roomba_delay(10);
-	    }
-	  
 	  printf("returned!\n");
-	  
 	  exit(0);
 	  break;
 	  
 	case MODE_UTURN:
 	  printf("ToDo: turning around\n");
-	  
 	  double return_bearing = atan2(-posY, -posX);
-	  
 	  orientToAngle(roomba, return_bearing);
-	  
 	  printf("turned around!\n");
-	  
 	  mode = MODE_RETURN;
 	  break;
 	  
