@@ -272,10 +272,12 @@ int main(int argc, char* argv[])
        * Get the red count to decide if we can leave the SEEK mode
        */
       
-      if (anyobs)
+      int red_count = getRedCount();
+      
+      if (anyobs || red_count > R_COUNT_THRESH)
 	{
 	  double red_ratio = redObstacleRatio(obs);
-	  if (red_ratio > RED_RATIO_THRESH)
+	  if (red_ratio > RED_RATIO_THRESH || red_count > R_COUNT_THRESH)
 	    {
 	      if (mode == MODE_SEEK)
 		{
@@ -294,7 +296,7 @@ int main(int argc, char* argv[])
 	}
       
       /*
-	int red_count = getRedCount();
+	
 	
 	printf("red count: %d\n", red_count);
 	

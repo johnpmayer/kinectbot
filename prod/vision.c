@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include "rgb_to_hsv_int.c"
 
 double depthToMillimeters(uint16_t raw_depth) {
@@ -103,8 +105,22 @@ double redObstacleRatio(uint8_t* obstacles)
 }
 
 int getRedCount() {
+  
+  uint32_t size = (W / REGION_RES) * (H / REGION_RES);
+  
+  uint8_t* obs = calloc( size, sizeof(uint8_t) );
+
+  memset(obs, 1, size);
+  
+  double ratio = redObstacleRatio(obs);
+  
+  return (int)(ratio * size);
+  
+  /*
   uint8_t* data;
-      
+  
+  
+  
   double* regions = calloc( (W / REGION_RES) * (H / REGION_RES), 
 			    sizeof(double) );
   
@@ -132,9 +148,9 @@ int getRedCount() {
       double g = data[offset+1];
       double b = data[offset+2];
       
-      /*
+      
        * dot prod
-       */
+       *
       double cosT = 
 	r /
 	sqrt( pow(r,2) + pow(g,2) + pow(b,2) );
@@ -164,7 +180,7 @@ int getRedCount() {
   free(regions);
   
   return red_regions;
-  
+  */
 }
 
 double getClosestPoint() {
