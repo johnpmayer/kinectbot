@@ -243,8 +243,6 @@ int main(int argc, char* argv[])
 	}
       }
       
-      
-      
       printf("Cols: ");
       
       uint32_t weight = 0;
@@ -304,27 +302,51 @@ int main(int argc, char* argv[])
 	  
 	case MODE_SEEK:
 	  if (anyobs) {
+	    
 	    printf("x:%f, y:%f, t:%f, com:%f\n", 
 		   posX, posY, posT,
 		   centerofmass);
 	    
+	    // ignore anything extraneous
 	    if (centerofmass < 2 || centerofmass > 13) {
 	      break;
 	    }
 	    
+	    // then always move to center if far outside, large move
+	    if (posY > 150) {
+	      moveMillimetersY(roomba, -Y_AVOID_L);
+	      orientToAngle(roomba, 0);
+	      break;
+	    }
+	    else if (posY < -150) {
+	      moveMillimetersY(roomba, Y_AVOID_L);
+	      orientToAngle(roomba, 0);
+	      break;
+	    }
+	    
+	    // then favor the center of mass somewhat, and make small move
 	    if (centerofmass < 6) {
 	      moveMillimetersY(roomba, -Y_AVOID_S);
 	      orientToAngle(roomba, 0);
+	      break;
 	    } else if (centerofmass > 9) {
 	      moveMillimetersY(roomba, Y_AVOID_S);
 	      orientToAngle(roomba, 0);
+	      break;
 	    } else {
+	      
 	      if (posY >= 0) {
-		moveMillimetersY(roomba, -Y_AVOID_L);
-		orientToAngle(roomba, 0);
-	      } else {
+		/*
+		 * finally, if in center and obstacle centered
+		 * favor moving out from the center
+		 */
 		moveMillimetersY(roomba, Y_AVOID_L);
 		orientToAngle(roomba, 0);
+		break;
+	      } else {
+		moveMillimetersY(roomba, -Y_AVOID_L);
+		orientToAngle(roomba, 0);
+		break;
 	      }
 	    }
 	    
@@ -338,27 +360,51 @@ int main(int argc, char* argv[])
 	  
 	case MODE_RETURN:
 	  if (anyobs) {
+	    
 	    printf("x:%f, y:%f, t:%f, com:%f\n", 
 		   posX, posY, posT,
 		   centerofmass);
 	    
+	    // ignore anything extraneous
 	    if (centerofmass < 2 || centerofmass > 13) {
 	      break;
 	    }
 	    
+	    // then always move to center if far outside, large move
+	    if (posY > 150) {
+	      moveMillimetersY(roomba, -Y_AVOID_L);
+	      orientToAngle(roomba, PI);
+	      break;
+	    }
+	    else if (posY < -150) {
+	      moveMillimetersY(roomba, Y_AVOID_L);
+	      orientToAngle(roomba, PI);
+	      break;
+	    }
+	    
+	    // then favor the center of mass somewhat, and make small move
 	    if (centerofmass < 6) {
 	      moveMillimetersY(roomba, Y_AVOID_S);
 	      orientToAngle(roomba, PI);
+	      break;
 	    } else if (centerofmass > 9) {
 	      moveMillimetersY(roomba, -Y_AVOID_S);
 	      orientToAngle(roomba, PI);
+	      break;
 	    } else {
+	      
 	      if (posY >= 0) {
-		moveMillimetersY(roomba, -Y_AVOID_L);
-		orientToAngle(roomba, PI);
-	      } else {
+		/*
+		 * finally, if in center and obstacle centered
+		 * favor moving out from the center
+		 */
 		moveMillimetersY(roomba, Y_AVOID_L);
 		orientToAngle(roomba, PI);
+		break;
+	      } else {
+		moveMillimetersY(roomba, -Y_AVOID_L);
+		orientToAngle(roomba, PI);
+		break;
 	      }
 	    }
 	    

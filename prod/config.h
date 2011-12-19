@@ -8,7 +8,7 @@
 #define D_THRESH 150
 #define R_COUNT_THRESH 75
 #define HSV_CNT_THRESH_CLOSE 150
-#define HSV_CNT_THRESH_FAR 50
+#define HSV_CNT_THRESH_FAR 100
 #define MODE_SEEK 0
 #define MODE_UTURN 1
 #define MODE_RETURN 2
