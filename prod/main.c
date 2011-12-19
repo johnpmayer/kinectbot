@@ -313,12 +313,12 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    // then always move to center if far outside, large move
-	    if (posY > 150) {
+	    if (posY > 250) {
 	      moveMillimetersY(roomba, -Y_AVOID_L);
 	      orientToAngle(roomba, 0);
 	      break;
 	    }
-	    else if (posY < -150) {
+	    else if (posY < -250) {
 	      moveMillimetersY(roomba, Y_AVOID_L);
 	      orientToAngle(roomba, 0);
 	      break;
@@ -371,12 +371,12 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    // then always move to center if far outside, large move
-	    if (posY > 150) {
+	    if (posY > 250) {
 	      moveMillimetersY(roomba, -Y_AVOID_L);
 	      orientToAngle(roomba, PI);
 	      break;
 	    }
-	    else if (posY < -150) {
+	    else if (posY < -250) {
 	      moveMillimetersY(roomba, Y_AVOID_L);
 	      orientToAngle(roomba, PI);
 	      break;
