@@ -279,6 +279,7 @@ int main(int argc, char* argv[])
 	  double red_ratio = redObstacleRatio(obs, HSV_CNT_THRESH_FAR);
 	  if (red_ratio > RED_RATIO_THRESH || red_count > R_COUNT_THRESH)
 	    {
+	      printf("RED OBJECT DETECTED\n");
 	      if (mode == MODE_SEEK)
 		{
 		  mode = MODE_UTURN;
@@ -302,7 +303,7 @@ int main(int argc, char* argv[])
 	
 	if (red_count > R_COUNT_THRESH)
 	{
-	printf("RED OBJECT DETECTED\n");
+	
 	//tempcmd = 'p';
 	
 	}
@@ -317,7 +318,7 @@ int main(int argc, char* argv[])
       
       switch(mode)
 	{
-
+	  
 	case MODE_SEEK:
 	  if (anyobs) {
 	    printf("x:%f, y:%f, t:%f, com:%f\n", 
