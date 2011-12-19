@@ -6,7 +6,7 @@
 #define H 480
 #define REGION_RES 40
 #define D_THRESH 150
-#define R_THRESH .22
+//#define R_THRESH .22
 #define R_COUNT_THRESH 80
 #define HSV_CNT_THRESH_CLOSE 250
 #define HSV_CNT_THRESH_FAR 80

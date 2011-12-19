@@ -93,8 +93,7 @@ void exc_one(Roomba* _roomba, char command)
       printf("delta dist:%d angle:%d\n", dist_i, angle_i);
       
       double dist = dist_i;
-      double angle = angle_i / 360.0 * 2.0 * PI;
-      
+      double angle = angle_i * (2.0 * PI) / 360;
       posT += angle;
       
       posT = normalize_angle(posT);
