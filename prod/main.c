@@ -348,17 +348,17 @@ int main(int argc, char* argv[])
 	    
 	    if (centerofmass < 6) {
 	      moveMillimetersY(roomba, Y_AVOID_S);
-	      orientToAngle(roomba, 0);
+	      orientToAngle(roomba, PI);
 	    } else if (centerofmass > 9) {
 	      moveMillimetersY(roomba, -Y_AVOID_S);
-	      orientToAngle(roomba, 0);
+	      orientToAngle(roomba, PI);
 	    } else {
 	      if (posY >= 0) {
 		moveMillimetersY(roomba, -Y_AVOID_L);
-		orientToAngle(roomba, 0);
+		orientToAngle(roomba, PI);
 	      } else {
 		moveMillimetersY(roomba, Y_AVOID_L);
-		orientToAngle(roomba, 0);
+		orientToAngle(roomba, PI);
 	      }
 	    }
 	    
