@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
       
       if (anyobs || red_count > R_COUNT_THRESH)
 	{
-	  double red_ratio = redObstacleRatio(obs);
+	  double red_ratio = redObstacleRatio(obs, HSV_CNT_THRESH_FAR);
 	  if (red_ratio > RED_RATIO_THRESH || red_count > R_COUNT_THRESH)
 	    {
 	      if (mode == MODE_SEEK)

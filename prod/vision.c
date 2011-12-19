@@ -38,7 +38,7 @@ void init(void) {
   }
 }
 
-double redObstacleRatio(uint8_t* obstacles)
+double redObstacleRatio(uint8_t* obstacles, int hsv_count_thresh)
 {
   
   uint8_t* data;
@@ -92,7 +92,7 @@ double redObstacleRatio(uint8_t* obstacles)
 	  if (obstacles[region_index])
 	    {
 	      obs_count++;
-	      if (regions[region_index] > HSV_THRESH)
+	      if (regions[region_index] > hsv_count_thresh)
 		{
 		  red_count++;
 		}
@@ -108,11 +108,13 @@ int getRedCount() {
   
   uint32_t size = (W / REGION_RES) * (H / REGION_RES);
   
-  uint8_t* obs = calloc( size, sizeof(uint8_t) );
+  uint8_t* all_obs = calloc( size, sizeof(uint8_t) );
 
-  memset(obs, 1, size);
+  memset(all_obs, 1, size);
   
-  double ratio = redObstacleRatio(obs);
+  double ratio = redObstacleRatio(all_obs, HSV_CNT_THRESH_CLOSE);
+  
+  free(all_obs);
   
   return (int)(ratio * size);
   
