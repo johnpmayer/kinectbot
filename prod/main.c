@@ -262,10 +262,7 @@ int main(int argc, char* argv[])
       printf("\n");
       
       double centerofmass = (double)weight/(double)area;
-      
-      /*
-       * At this point we know what's in front of us and what columns are clear (sans blind spot)
-       */
+ 
       
       /*
        * Get the red count to decide if we can leave the SEEK mode
@@ -296,19 +293,6 @@ int main(int argc, char* argv[])
 	}
       
       /*
-	
-	
-	printf("red count: %d\n", red_count);
-	
-	if (red_count > R_COUNT_THRESH)
-	{
-	
-	//tempcmd = 'p';
-	
-	}
-      */
-      
-      /*
        * Query the distanced traveled, which updates our position
        */
       
@@ -323,10 +307,15 @@ int main(int argc, char* argv[])
 	    printf("x:%f, y:%f, t:%f, com:%f\n", 
 		   posX, posY, posT,
 		   centerofmass);
-	    if (centerofmass < ((W / REGION_RES) - 1) * .25) {
+	    
+	    if (centerofmass < 2 || centerofmass > 13) {
+	      break;
+	    }
+	    
+	    if (centerofmass < 6) {
 	      moveMillimetersY(roomba, -Y_AVOID_S);
 	      orientToAngle(roomba, 0);
-	    } else if (centerofmass > ((W / REGION_RES) - 1) * .75) {
+	    } else if (centerofmass > 9) {
 	      moveMillimetersY(roomba, Y_AVOID_S);
 	      orientToAngle(roomba, 0);
 	    } else {
@@ -338,15 +327,6 @@ int main(int argc, char* argv[])
 		orientToAngle(roomba, 0);
 	      }
 	    }
-	    /*
-	      if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
-	      printf("obs right, go LEFT\n");
-	      tempcmd = 'a';
-	      } else {
-	      printf("obs left, go RIGHT\n");
-	      tempcmd = 'd';
-	      }
-	    */
 	    
 	  } else {
 	    printf("clear\n");
@@ -361,39 +341,26 @@ int main(int argc, char* argv[])
 	    printf("x:%f, y:%f, t:%f, com:%f\n", 
 		   posX, posY, posT,
 		   centerofmass);
-	    if (centerofmass < ((W / REGION_RES) - 1) * .3) {
+	    
+	    if (centerofmass < 2 || centerofmass > 13) {
+	      break;
+	    }
+	    
+	    if (centerofmass < 6) {
 	      moveMillimetersY(roomba, Y_AVOID_S);
-	      orientToAngle(roomba, PI);
-	    } else if (centerofmass > ((W / REGION_RES) - 1) * .7) {
+	      orientToAngle(roomba, 0);
+	    } else if (centerofmass > 9) {
 	      moveMillimetersY(roomba, -Y_AVOID_S);
-	      orientToAngle(roomba, PI);
+	      orientToAngle(roomba, 0);
 	    } else {
 	      if (posY >= 0) {
 		moveMillimetersY(roomba, -Y_AVOID_L);
-		orientToAngle(roomba, PI);
+		orientToAngle(roomba, 0);
 	      } else {
 		moveMillimetersY(roomba, Y_AVOID_L);
-		orientToAngle(roomba, PI);
+		orientToAngle(roomba, 0);
 	      }
 	    }
-	    /*
-	      if (posY >= 0) {
-	      moveMillimetersY(roomba, -Y_AVOID);
-	      orientToAngle(roomba, PI);
-	      } else {
-	      moveMillimetersY(roomba, Y_AVOID);
-	      orientToAngle(roomba, PI);
-	      }
-	    */
-	    /*
-	      if (centerofmass > (((W / REGION_RES)+1.0)/2.0) ) {
-	      printf("obs right, go LEFT\n");
-	      tempcmd = 'a';
-	      } else {
-	      printf("obs left, go RIGHT\n");
-	      tempcmd = 'd';
-	      }
-	    */
 	    
 	  } else {
 	    printf("clear\n");

@@ -15,6 +15,6 @@
 #define MODE_RETURN 2
 #define MODE_FINISH 3
 #define UTURN_THRESH 0.1
-#define Y_AVOID_S 150
-#define Y_AVOID_L 350
+#define Y_AVOID_S 200
+#define Y_AVOID_L 400
 #define RED_RATIO_THRESH .5
