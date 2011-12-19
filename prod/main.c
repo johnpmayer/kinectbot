@@ -26,12 +26,12 @@ double normalize_angle(double in)
   
   while(out > PI) {
     out -= 2*PI;
-    printf("normalized posT down\n");
+    //printf("normalized posT down\n");
   }
   
   while(out <= -PI) {
     out += 2*PI;
-    printf("normalized posT up\n");
+    //printf("normalized posT up\n");
   }
   
   return out;
@@ -110,7 +110,7 @@ void exc_one(Roomba* _roomba, char command)
 void orientToAngle(Roomba* roomba, double targetAngle)
 {
   
-  printf("turning to desired angle %f\n", targetAngle);
+  //printf("turning to desired angle %f\n", targetAngle);
   
   double diff = angle_diff(targetAngle, posT);
   double abs_diff = (diff < 0) ? -diff : diff;
@@ -142,7 +142,7 @@ void orientToAngle(Roomba* roomba, double targetAngle)
             
     }
   
-  printf("finished turning\n");
+  //printf("finished turning\n");
   
 }
 

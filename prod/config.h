@@ -8,7 +8,7 @@
 #define D_THRESH 175
 #define R_THRESH .22
 #define R_COUNT_THRESH 80
-#define HSV_CNT_THRESH_CLOSE 400
+#define HSV_CNT_THRESH_CLOSE 250
 #define HSV_CNT_THRESH_FAR 100
 #define MODE_SEEK 0
 #define MODE_UTURN 1
@@ -17,4 +17,4 @@
 #define UTURN_THRESH 0.1
 #define Y_AVOID_S 150
 #define Y_AVOID_L 350
-#define RED_RATIO_THRESH .5
+#define RED_RATIO_THRESH .6
