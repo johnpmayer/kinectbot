@@ -49,7 +49,7 @@ double angle_diff(double target, double test)
 void exc_one(Roomba* _roomba, char command)
 {
   
-  printf("exc command: %c\n", command);
+  //  printf("exc command: %c\n", command);
   
   switch(command)
     {
@@ -137,9 +137,9 @@ void orientToAngle(Roomba* roomba, double targetAngle)
       diff = angle_diff(targetAngle, posT);
       abs_diff = (diff < 0) ? -diff : diff;
       
-      printf("targetAngle:%f posT:%f diff:%f (%f)\n", 
-	     targetAngle, posT, diff, abs_diff);
-      //      
+      //      printf("targetAngle:%f posT:%f diff:%f (%f)\n", 
+      //	     targetAngle, posT, diff, abs_diff);
+            
     }
   
   printf("finished turning\n");
@@ -166,7 +166,7 @@ void moveMillimetersY(Roomba* roomba, double yDist) {
     {
       roomba_forward_at(roomba, 150);
       exc_one(roomba, 'q');
-      printf("targetY: %f posY: %f\n", targetYPos, posY);
+      //printf("targetY: %f posY: %f\n", targetYPos, posY);
     }
   
   printf("moved in y direction\n");
@@ -194,7 +194,7 @@ void moveMillimetersX(Roomba* roomba, double xDist) {
       roomba_forward_at(roomba, 150);
       roomba_delay(10);
       exc_one(roomba, 'q');
-      printf("targetX: %f posX: %f\n", targetXPos, posX);
+      //printf("targetX: %f posX: %f\n", targetXPos, posX);
     }
   
   printf("moved in x direction\n");
@@ -227,8 +227,8 @@ int main(int argc, char* argv[])
        * Get obstacles and print the status of each column
        */
       
-      double closest = getClosestPoint();
-      printf("closest point %f\n", closest);
+      //double closest = getClosestPoint();
+      //printf("closest point %f\n", closest);
       
       uint8_t* obs = findObstacles();
       uint8_t* cols = calloc ( (W / REGION_RES),
@@ -313,14 +313,16 @@ int main(int argc, char* argv[])
        */
       
       exc_one(roomba, 'q');
-      printf("x:%f, y:%f, t:%f\n", posX, posY, posT);
+      //printf("x:%f, y:%f, t:%f\n", posX, posY, posT);
       
       switch(mode)
 	{
 
 	case MODE_SEEK:
 	  if (anyobs) {
-	    
+	    printf("x:%f, y:%f, t:%f, com:%f\n", 
+		   posX, posY, posT,
+		   centerofmass);
 	    if (centerofmass < ((W / REGION_RES) - 1) * .25) {
 	      moveMillimetersY(roomba, -Y_AVOID_S);
 	      orientToAngle(roomba, 0);
@@ -356,7 +358,9 @@ int main(int argc, char* argv[])
 	  
 	case MODE_RETURN:
 	  if (anyobs) {
-	    
+	    printf("x:%f, y:%f, t:%f, com:%f\n", 
+		   posX, posY, posT,
+		   centerofmass);
 	    if (centerofmass < ((W / REGION_RES) - 1) * .3) {
 	      moveMillimetersY(roomba, Y_AVOID_S);
 	      orientToAngle(roomba, PI);

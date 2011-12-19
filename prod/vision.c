@@ -100,6 +100,8 @@ double redObstacleRatio(uint8_t* obstacles, int hsv_count_thresh)
 	}
     }
   
+  free(regions);
+  
   return (double)red_count / (double)obs_count;
   
 }
