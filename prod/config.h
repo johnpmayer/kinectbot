@@ -29,7 +29,7 @@
 #define UTURN_THRESH 0.1
 
 // Avoidance 'strafe' constants
-#define Y_AVOID_S 350
-#define Y_AVOID_L 350
+#define Y_AVOID_S 400
+#define Y_AVOID_L 400
 
 #define CENTER_COLUMN_R 150
