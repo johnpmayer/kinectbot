@@ -19,6 +19,8 @@ double posX = 0.0;
 double posY = 0.0;
 double posT = 0.0;
 
+int FOW_SPEED;
+
 /* Enforces that a double is in the range (-PI, PI] */
 double normalize_angle(double in)
 {
@@ -208,6 +210,7 @@ int main(int argc, char* argv[])
   init();
   
   Roomba* roomba = roomba_init( argv[1] );
+  FOW_SPEED = atoi( argv[2] );
 
   exc_one(roomba, 'q');
   

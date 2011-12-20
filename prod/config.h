@@ -34,4 +34,4 @@
 
 #define CENTER_COLUMN_R 150
 
-#define FOW_SPEED 200
+//#define FOW_SPEED 200
