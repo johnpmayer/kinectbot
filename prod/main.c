@@ -21,6 +21,21 @@ double posT = 0.0;
 
 int FOW_SPEED;
 
+void waitRoombaPlayBtnPush(Roomba* _roomba)
+{
+        printf("Wait for Play Button to be pushed!\n");
+        while(1)
+        {
+                roomba_read_sensors(_roomba );
+                roomba_delay(COMMANDPAUSE_MILLIS);
+                if((_roomba->sensor_bytes[11]&0x01) == 1)
+                {
+                        printf("Play Button Pushed!\n");
+                        return;
+                }
+        }
+}
+
 /* Enforces that a double is in the range (-PI, PI] */
 double normalize_angle(double in)
 {
@@ -219,6 +234,8 @@ int main(int argc, char* argv[])
   posT = 0.0;
 
   uint8_t mode = MODE_SEEK;
+  
+  waitRoombaPlayBtnPush(roomba);
   
   printf("Start loop");
   
@@ -420,13 +437,35 @@ int main(int argc, char* argv[])
 	  break;
 	  
 	case MODE_FINISH:
+
+	  exc_one(roomba, 'p');
+	  
+	  //int i;
+	  for (i = 0; i < 5; i++)
+	    {
+	      roomba_play_note(roomba, 10, 10);
+	      roomba_delay(100);
+	    }
+	  
 	  exc_one(roomba, 'p');
 	  printf("returned!\n");
 	  exit(0);
 	  break;
 	  
 	case MODE_UTURN:
-	  printf("ToDo: turning around\n");
+	  
+	  exc_one(roomba, 'p');
+	  
+	  //int i;
+	  for (i = 0; i < 5; i++)
+	    {
+	      roomba_play_note(roomba, 10, 10);
+	      roomba_delay(100);
+	    }
+	  
+	  waitRoombaPlayBtnPush(roomba);
+	  
+	  //printf("ToDo: turning around\n");
 	  //double return_bearing = atan2(-posY, -posX);
 	  orientToAngle(roomba, PI);//return_bearing);
 	  printf("turned around!\n");
