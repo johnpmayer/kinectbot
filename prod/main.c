@@ -82,7 +82,7 @@ void exc_one(Roomba* _roomba, char command)
     default:
       
       // sleep
-      roomba_delay(100);
+      roomba_delay(10);
       
       roomba_read_sensors(_roomba);
       uint8_t* sb = ((Roomba*)_roomba)->sensor_bytes;
@@ -93,7 +93,7 @@ void exc_one(Roomba* _roomba, char command)
       printf("delta dist:%d angle:%d\n", dist_i, angle_i);
       
       double dist = dist_i;
-      double angle = angle_i * (2.0 * PI) / 360;
+      double angle = (double)angle_i * (2.0 * PI) / 360.0;
       posT += angle;
       
       posT = normalize_angle(posT);
