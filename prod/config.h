@@ -13,7 +13,7 @@
 
 // for detecting non-obstacled red things
 #define R_COUNT_THRESH 75
-#define HSV_CNT_THRESH_CLOSE 300 
+#define HSV_CNT_THRESH_CLOSE 400
 
 // for detecting 'redness' of obstacle masks (failsafe)
 #define RED_RATIO_THRESH .5
