@@ -55,7 +55,7 @@ void exc_one(Roomba* _roomba, char command)
     {
       
     case'w':
-      roomba_forward_at(_roomba,150);
+      roomba_forward_at(_roomba,FOW_SPEED);
       break;
       
     case's':
@@ -163,7 +163,7 @@ void moveMillimetersY(Roomba* roomba, double yDist) {
   while ( ( yDist > 0 && posY < targetYPos ) ||
 	  ( yDist < 0 && posY > targetYPos ) )
     {
-      roomba_forward_at(roomba, 150);
+      roomba_forward_at(roomba, FOW_SPEED);
       exc_one(roomba, 'q');
       //printf("targetY: %f posY: %f\n", targetYPos, posY);
     }
@@ -190,7 +190,7 @@ void moveMillimetersX(Roomba* roomba, double xDist) {
   while ( ( xDist > 0 && posX < targetXPos ) ||
 	  ( xDist < 0 && posX > targetXPos ) )
     {
-      roomba_forward_at(roomba, 150);
+      roomba_forward_at(roomba, FOW_SPEED);
       roomba_delay(10);
       exc_one(roomba, 'q');
       //printf("targetX: %f posX: %f\n", targetXPos, posX);

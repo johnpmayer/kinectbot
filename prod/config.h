@@ -33,3 +33,5 @@
 #define Y_AVOID_L 400
 
 #define CENTER_COLUMN_R 150
+
+#define FOW_SPEED 200
