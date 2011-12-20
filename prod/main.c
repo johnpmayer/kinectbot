@@ -20,6 +20,7 @@ double posY = 0.0;
 double posT = 0.0;
 
 int FOW_SPEED;
+int SPIN_SPEED;
 
 void waitRoombaPlayBtnPush(Roomba* _roomba)
 {
@@ -74,7 +75,7 @@ void exc_one(Roomba* _roomba, char command)
     case'w':
       roomba_forward_at(_roomba,FOW_SPEED);
       break;
-      
+      /*
     case's':
       roomba_backward(_roomba);
       break;
@@ -86,17 +87,17 @@ void exc_one(Roomba* _roomba, char command)
     case'd':
       roomba_spinright_at(_roomba,100);
       break;
-      
+      */
     case'p':
       roomba_stop(_roomba);
       break;
-      
+      /*
     case'e':
       roomba_stop(_roomba);
       pthread_exit(NULL);
       break;
-      
-    default:
+      */
+    default: // q
       
       // sleep
       roomba_delay(10);
@@ -140,12 +141,12 @@ void orientToAngle(Roomba* roomba, double targetAngle)
       if (diff > 0) 
 	{
 	  //exc_one(roomba, 'd');
-	  roomba_spinright_at(roomba, 50);
+	  roomba_spinright_at(roomba, SPIN_SPEED);
 	}
       else
 	{
 	  //exc_one(roomba, 'a');
-	  roomba_spinleft_at(roomba, 50);
+	  roomba_spinleft_at(roomba, SPIN_SPEED);
 	}
       
       exc_one(roomba, 'q');
@@ -226,6 +227,7 @@ int main(int argc, char* argv[])
   
   Roomba* roomba = roomba_init( argv[1] );
   FOW_SPEED = atoi( argv[2] );
+  SPIN_SPEED = atoi( argv[3] );
 
   exc_one(roomba, 'q');
   
